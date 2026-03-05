@@ -24,33 +24,31 @@ export function ConnectCard({
   primaryHref
 }: ConnectCardProps) {
   return (
-    <section className={styles.panel}>
+    <section className={`${styles.panel} ${styles.connectCard}`}>
       <div className={styles.cardHeader}>
         <div>
-          <p className="eyebrow">Strava Status</p>
-          <h2 className={styles.sectionTitle}>Connect ride history</h2>
+          <p className="eyebrow">{connected ? "Account" : "Ride sync"}</p>
+          <h2 className={styles.sectionTitle}>
+            {connected ? athleteName : "Connect ride history"}
+          </h2>
         </div>
         <span className={styles.statusBadge}>{modeLabel}</span>
       </div>
 
       <p className={styles.sectionText}>
         {connected
-          ? `${athleteName} is linked to ${activityCount} mock cycling activities.`
-          : "Link a mock Strava account to unlock ride ingestion and component wear modeling."}
+          ? `${activityCount} tagged rides are flowing into Gear Health for bike-aware service tracking.`
+          : "Connect ride history to start bike-aware wear tracking and retailer comparison."}
       </p>
 
       <div className={styles.statRow}>
-        <div className={styles.stat}>
-          <div className={styles.metricLabel}>Connection</div>
-          <div className={styles.statValue}>{connected ? "Connected" : "Not linked"}</div>
-        </div>
         <div className={styles.stat}>
           <div className={styles.metricLabel}>Activities ready</div>
           <div className={styles.statValue}>{activityCount}</div>
         </div>
       </div>
 
-      <div className={styles.inlineActions}>
+      <div className={styles.connectActions}>
         {!connected ? (
           <button
             className={`${styles.button} ${connectDisabled ? styles.buttonDisabled : ""}`}
@@ -58,16 +56,16 @@ export function ConnectCard({
             type="button"
             onClick={onConnect}
           >
-            Connect mock Strava
+            Connect rides
           </button>
         ) : (
           <Link className={styles.button} href={primaryHref}>
-            Continue
+            Open dashboard
           </Link>
         )}
 
         <Link className={styles.buttonGhost} href="/projects/cc-component-health/setup">
-          Review setup
+          Manage bikes
         </Link>
       </div>
     </section>
