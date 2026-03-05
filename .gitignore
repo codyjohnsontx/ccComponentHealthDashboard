@@ -1,6 +1,10 @@
 .next
+.next_build_verify
+.next_stale_runtime_fix
+.next_stale_runtime_fix_2
 coverage
 node_modules
 .pnpm-store
 dist
 *.log
+*.tsbuildinfo
