@@ -7,11 +7,10 @@ export default function ComponentHealthSetupPage() {
   return (
     <section className={styles.stack}>
       <div className={styles.panel}>
-        <p className="eyebrow">Setup Flow</p>
-        <h2 className={styles.sectionTitle}>Bike + components onboarding</h2>
+        <p className="eyebrow">Settings</p>
+        <h2 className={styles.sectionTitle}>Bikes, installs, and ride attribution</h2>
         <p className={styles.sectionText}>
-          Save a bike profile, choose a wear sensitivity model, and add component presets
-          that can be edited with install dates and baseline miles.
+          Update the bikes on the account, component installs, and service inputs.
         </p>
       </div>
 

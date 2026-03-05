@@ -40,7 +40,7 @@ const severityOrder: Record<Exclude<AlertLevel, "none">, number> = {
 };
 
 export function buildAlerts(
-  healthItems: Array<ComponentHealth & { componentLabel: string }>
+  healthItems: Array<ComponentHealth & { componentLabel: string; bikeId: string; bikeName: string }>
 ): HealthAlert[] {
   return healthItems
     .filter(
@@ -48,12 +48,16 @@ export function buildAlerts(
         item
       ): item is ComponentHealth & {
         componentLabel: string;
+        bikeId: string;
+        bikeName: string;
         alertLevel: Exclude<AlertLevel, "none">;
       } => item.alertLevel !== "none"
     )
     .map((item) => ({
       id: `alert-${item.componentId}`,
       componentId: item.componentId,
+      bikeId: item.bikeId,
+      bikeName: item.bikeName,
       componentLabel: item.componentLabel,
       severity: item.alertLevel,
       remainingMiles: item.remainingMiles,

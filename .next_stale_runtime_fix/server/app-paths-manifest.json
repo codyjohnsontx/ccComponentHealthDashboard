@@ -1,0 +1,10 @@
+{
+  "/api/projects/cc-component-health/offers/route": "app/api/projects/cc-component-health/offers/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js",
+  "/projects/cc-component-health/component/[id]/page": "app/projects/cc-component-health/component/[id]/page.js",
+  "/projects/cc-component-health/page": "app/projects/cc-component-health/page.js",
+  "/projects/cc-component-health/setup/page": "app/projects/cc-component-health/setup/page.js",
+  "/projects/cc-component-health/dashboard/page": "app/projects/cc-component-health/dashboard/page.js",
+  "/projects/cc-component-health/alerts/page": "app/projects/cc-component-health/alerts/page.js"
+}

@@ -4,14 +4,14 @@ export default function HomePage() {
   return (
     <main className="app-home">
       <div className="app-home__card">
-        <p className="eyebrow">Portfolio Demo</p>
-        <h1>Ride-Based Component Health</h1>
+        <p className="eyebrow">Strava Feature Concept</p>
+        <h1>Strava Gear Health</h1>
         <p>
-          A cycling maintenance dashboard that turns ride miles into service-life
-          countdowns, alerts, and replacement calls to action.
+          Bike-tagged ride history translated into service timing, maintenance alerts,
+          and retailer price comparison across the market.
         </p>
         <Link className="app-home__link" href="/projects/cc-component-health">
-          Open the demo
+          Open Gear Health
         </Link>
       </div>
     </main>

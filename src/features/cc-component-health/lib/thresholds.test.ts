@@ -1,22 +1,22 @@
 import { describe, expect, it } from "vitest";
 
 import { buildAlerts, getAlertLevel } from "@/src/features/cc-component-health/lib/alerts";
-import { isCouponEligible } from "@/src/features/cc-component-health/lib/coupons";
 import type { ComponentHealth } from "@/src/features/cc-component-health/types";
 
 function createHealth(
   componentId: string,
   remainingPercent: number
-): ComponentHealth & { componentLabel: string } {
+): ComponentHealth & { componentLabel: string; bikeId: string; bikeName: string } {
   return {
     componentId,
+    bikeId: "bike-1",
+    bikeName: "Factor OSTRO VAM",
     componentLabel: `Component ${componentId}`,
     rawMilesSinceInstall: 0,
     milesSinceInstall: 0,
     remainingMiles: Math.max(0, remainingPercent * 1000),
     remainingPercent: Math.max(0, remainingPercent),
     alertLevel: getAlertLevel(remainingPercent),
-    couponEligible: isCouponEligible(remainingPercent),
     countdownSeries: [],
     sensitivityMultiplier: 1
   };
@@ -45,11 +45,17 @@ describe("threshold logic", () => {
     expect(alerts[0]?.severity).toBe("expired");
   });
 
-  it("flags coupon eligibility at exactly 5 percent", () => {
-    expect(isCouponEligible(0.05)).toBe(true);
-  });
+  it("orders alerts by severity and remaining percent", () => {
+    const alerts = buildAlerts([
+      createHealth("warning", 0.25),
+      createHealth("critical", 0.08),
+      createHealth("expired", 0)
+    ]);
 
-  it("does not flag coupon eligibility above 5 percent", () => {
-    expect(isCouponEligible(0.051)).toBe(false);
+    expect(alerts.map((alert) => alert.componentId)).toEqual([
+      "expired",
+      "critical",
+      "warning"
+    ]);
   });
 });

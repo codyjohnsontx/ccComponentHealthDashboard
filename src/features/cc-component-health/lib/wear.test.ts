@@ -6,6 +6,7 @@ import type { Activity, BikeComponent } from "@/src/features/cc-component-health
 const activities: Activity[] = [
   {
     id: "a-1",
+    bikeId: "bike-1",
     date: "2026-01-01",
     distanceMiles: 25,
     title: "Before install",
@@ -13,6 +14,7 @@ const activities: Activity[] = [
   },
   {
     id: "a-2",
+    bikeId: "bike-1",
     date: "2026-01-10",
     distanceMiles: 40,
     title: "After install 1",
@@ -20,15 +22,25 @@ const activities: Activity[] = [
   },
   {
     id: "a-3",
+    bikeId: "bike-1",
     date: "2026-01-12",
     distanceMiles: 35,
     title: "After install 2",
+    type: "ride"
+  },
+  {
+    id: "a-4",
+    bikeId: "bike-2",
+    date: "2026-01-11",
+    distanceMiles: 100,
+    title: "Other bike ride",
     type: "ride"
   }
 ];
 
 const component: BikeComponent = {
   id: "chain-1",
+  bikeId: "bike-1",
   type: "chain",
   label: "Chain",
   serviceLifeMiles: 250,
@@ -44,6 +56,10 @@ describe("wear calculations", () => {
 
   it("excludes rides before install date", () => {
     expect(calculateMilesSinceInstall(component, activities)).not.toBe(120);
+  });
+
+  it("ignores rides from other bikes", () => {
+    expect(calculateMilesSinceInstall(component, activities)).toBe(95);
   });
 
   it("reduces consumed life under conservative sensitivity", () => {

@@ -1,15 +1,18 @@
+import { createSeededDemoState } from "@/src/features/cc-component-health/data/demoSeed";
 import { getStravaMode } from "@/src/features/cc-component-health/config/strava";
 import type { DemoState } from "@/src/features/cc-component-health/types";
 
 const STORAGE_KEY = "cc-component-health-demo-state";
+const STORAGE_SCHEMA_VERSION = 2;
+
+type PersistedDemoState = DemoState & {
+  _schemaVersion?: number;
+};
 
 export function createDefaultDemoState(): DemoState {
   return {
-    stravaConnected: false,
-    stravaMode: getStravaMode(),
-    athleteName: "Avery Rider",
-    bike: null,
-    components: []
+    ...createSeededDemoState(),
+    stravaMode: getStravaMode()
   };
 }
 
@@ -27,13 +30,18 @@ export function loadDemoState(): DemoState {
   }
 
   try {
-    const parsedValue = JSON.parse(storedValue) as Partial<DemoState>;
+    const parsedValue = JSON.parse(storedValue) as Partial<PersistedDemoState>;
+
+    if (parsedValue._schemaVersion !== STORAGE_SCHEMA_VERSION) {
+      return defaultState;
+    }
 
     return {
       ...defaultState,
       ...parsedValue,
       stravaMode: defaultState.stravaMode,
-      bike: parsedValue.bike ?? null,
+      bikes: parsedValue.bikes ?? defaultState.bikes,
+      selectedBikeId: parsedValue.selectedBikeId ?? defaultState.selectedBikeId,
       components: parsedValue.components ?? []
     };
   } catch {
@@ -46,5 +54,11 @@ export function saveDemoState(state: DemoState) {
     return;
   }
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  window.localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      ...state,
+      _schemaVersion: STORAGE_SCHEMA_VERSION
+    } satisfies PersistedDemoState)
+  );
 }

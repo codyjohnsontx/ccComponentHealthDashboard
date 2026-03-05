@@ -1,6 +1,5 @@
 import { getAlertLevel } from "@/src/features/cc-component-health/lib/alerts";
 import { buildCountdownSeries } from "@/src/features/cc-component-health/lib/chartSeries";
-import { isCouponEligible } from "@/src/features/cc-component-health/lib/coupons";
 import { getSensitivityMultiplier } from "@/src/features/cc-component-health/lib/sensitivity";
 import type {
   Activity,
@@ -15,6 +14,10 @@ export function calculateMilesSinceInstall(
 ): number {
   const installDateMs = new Date(component.installDate).getTime();
   const trackedMiles = activities.reduce((total, activity) => {
+    if (activity.bikeId !== component.bikeId) {
+      return total;
+    }
+
     if (new Date(activity.date).getTime() < installDateMs) {
       return total;
     }
@@ -39,12 +42,12 @@ export function calculateComponentHealth(
 
   return {
     componentId: component.id,
+    bikeId: component.bikeId,
     rawMilesSinceInstall,
     milesSinceInstall,
     remainingMiles,
     remainingPercent,
     alertLevel: getAlertLevel(remainingPercent),
-    couponEligible: isCouponEligible(remainingPercent),
     countdownSeries: buildCountdownSeries(component, activities, sensitivity),
     sensitivityMultiplier
   };
@@ -53,10 +56,15 @@ export function calculateComponentHealth(
 export function calculateAllComponentHealth(
   components: BikeComponent[],
   activities: Activity[],
-  sensitivity: WearSensitivity
+  sensitivity: WearSensitivity,
+  bikeSensitivityById?: Partial<Record<string, WearSensitivity>>
 ): ComponentHealth[] {
   return components.map((component) =>
-    calculateComponentHealth(component, activities, sensitivity)
+    calculateComponentHealth(
+      component,
+      activities,
+      bikeSensitivityById?.[component.bikeId] ?? sensitivity
+    )
   );
 }
 

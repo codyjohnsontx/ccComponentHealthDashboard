@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 
-import { formatMiles, formatPercent } from "@/src/features/cc-component-health/lib/formatting";
+import {
+  formatCurrency,
+  formatMiles,
+  formatPercent
+} from "@/src/features/cc-component-health/lib/formatting";
 import type { HealthAlert } from "@/src/features/cc-component-health/types";
 import styles from "@/src/features/cc-component-health/components/feature.module.css";
 
@@ -29,7 +33,7 @@ export function AlertList({ alerts, onAlertClick }: AlertListProps) {
         <article key={alert.id} className={styles.card}>
           <div className={styles.cardHeader}>
             <div>
-              <p className="eyebrow">Alert</p>
+              <p className="eyebrow">{alert.bikeName}</p>
               <h3 className={styles.sectionTitle}>{alert.componentLabel}</h3>
             </div>
             <span className={`${styles.pill} ${severityClass(alert.severity)}`}>
@@ -47,17 +51,26 @@ export function AlertList({ alerts, onAlertClick }: AlertListProps) {
               <div className={styles.statValue}>{formatMiles(alert.remainingMiles)}</div>
             </div>
             <div className={styles.stat}>
-              <div className={styles.metricLabel}>Remaining percent</div>
-              <div className={styles.statValue}>{formatPercent(alert.remainingPercent)}</div>
+              <div className={styles.metricLabel}>Best current price</div>
+              <div className={styles.statValue}>
+                {alert.bestPriceStartingAt !== undefined
+                  ? formatCurrency(alert.bestPriceStartingAt)
+                  : "N/A"}
+              </div>
             </div>
           </div>
 
+          <p className={styles.sectionText}>
+            {formatPercent(alert.remainingPercent)} remaining across{" "}
+            {alert.retailerCount ?? 0} partner retailers.
+          </p>
+
           <Link
-            className={styles.button}
+            className={styles.buttonGhost}
             href={`/projects/cc-component-health/component/${alert.componentId}`}
             onClick={() => onAlertClick(alert)}
           >
-            Review component
+            Review pricing
           </Link>
         </article>
       ))}

@@ -7,6 +7,7 @@ import { trackEvent } from "@/src/features/cc-component-health/analytics/trackEv
 import { ComponentCard } from "@/src/features/cc-component-health/components/ComponentCard";
 import { EmptyState } from "@/src/features/cc-component-health/components/EmptyState";
 import { useDemoState } from "@/src/features/cc-component-health/context/DemoStateProvider";
+import { retailers } from "@/src/features/cc-component-health/data/retailers";
 import { formatMiles } from "@/src/features/cc-component-health/lib/formatting";
 import styles from "@/src/features/cc-component-health/components/feature.module.css";
 
@@ -15,9 +16,13 @@ const emittedDashboardEvents = new Set<string>();
 export default function ComponentHealthDashboardPage() {
   const {
     state,
-    componentHealth,
+    activities,
+    bikes,
+    selectedBikeId,
+    selectBike,
     totalRideMiles,
-    alerts,
+    filteredComponentHealth,
+    filteredAlerts,
     isSetupComplete
   } = useDemoState();
 
@@ -30,35 +35,39 @@ export default function ComponentHealthDashboardPage() {
 
     emittedDashboardEvents.add(key);
     trackEvent("dashboard_viewed", {
-      componentCount: componentHealth.length,
-      activeAlerts: alerts.length
+      componentCount: filteredComponentHealth.length,
+      activeAlerts: filteredAlerts.length,
+      bikeId: selectedBikeId
     });
-  }, [alerts.length, componentHealth.length]);
+  }, [filteredAlerts.length, filteredComponentHealth.length, selectedBikeId]);
 
   useEffect(() => {
-    componentHealth
-      .filter((item) => item.couponEligible)
+    filteredComponentHealth
+      .filter((item) => item.bestPriceOffer)
       .forEach((item) => {
-        const key = `coupon_shown:${item.componentId}`;
+        const key = `best_price_shown:${item.componentId}:${selectedBikeId}`;
 
         if (emittedDashboardEvents.has(key)) {
           return;
         }
 
         emittedDashboardEvents.add(key);
-        trackEvent("coupon_shown", {
+        trackEvent("best_price_shown", {
           componentId: item.componentId,
-          remainingMiles: item.remainingMiles,
+          bikeId: item.bikeId,
+          catalogKey: item.catalogKey,
+          price: item.bestPriceOffer?.price,
+          totalPrice: item.bestPriceOffer?.totalPrice,
           remainingPercent: item.remainingPercent
         });
       });
-  }, [componentHealth]);
+  }, [filteredComponentHealth, selectedBikeId]);
 
   if (!state.stravaConnected) {
     return (
       <EmptyState
-        title="Connect the ride feed before loading health calculations."
-        description="The dashboard needs imported cycling miles before it can compute wear countdowns."
+        title="Ride sync must be active before loading Gear Health."
+        description="The dashboard uses bike-tagged ride miles to calculate wear and compare part pricing."
         primaryHref="/projects/cc-component-health"
         primaryLabel="Open landing page"
       />
@@ -68,64 +77,164 @@ export default function ComponentHealthDashboardPage() {
   if (!isSetupComplete) {
     return (
       <EmptyState
-        title="Finish setup to generate dashboard health."
-        description="Add a bike profile and at least one component preset to populate remaining miles, charts, and alerts."
+        title="Add at least one bike and tracked component."
+        description="Gear Health needs bike setup and service installs before it can surface wear timing and retailer pricing."
         primaryHref="/projects/cc-component-health/setup"
-        primaryLabel="Complete setup"
+        primaryLabel="Open bike setup"
       />
     );
   }
 
-  const couponCount = componentHealth.filter((item) => item.couponEligible).length;
+  const dueSoonCount = filteredComponentHealth.filter(
+    (item) => item.alertLevel !== "none"
+  ).length;
+  const priorityItems = [...filteredComponentHealth]
+    .sort((left, right) => left.remainingPercent - right.remainingPercent)
+    .slice(0, 3);
 
   return (
-    <section className={styles.stack}>
-      <div className={styles.summaryGrid}>
-        <div className={styles.summaryCard}>
-          <div className={styles.metricLabel}>Components</div>
-          <div className={styles.statValue}>{componentHealth.length}</div>
-        </div>
-        <div className={styles.summaryCard}>
-          <div className={styles.metricLabel}>Active alerts</div>
-          <div className={styles.statValue}>{alerts.length}</div>
-        </div>
-        <div className={styles.summaryCard}>
-          <div className={styles.metricLabel}>Coupon-ready</div>
-          <div className={styles.statValue}>{couponCount}</div>
-        </div>
-        <div className={styles.summaryCard}>
-          <div className={styles.metricLabel}>Ride miles</div>
-          <div className={styles.statValue}>{formatMiles(totalRideMiles)}</div>
+    <section className={styles.desktopThreeCol}>
+      <aside className={styles.leftRail}>
+        <section className={styles.panel}>
+          <p className="eyebrow">Bike filters</p>
+          <h2 className={styles.sectionTitle}>Current view</h2>
+          <div className={styles.navTabs}>
+            <button
+              className={`${styles.navTab} ${selectedBikeId === "all" ? styles.navTabActive : ""}`}
+              type="button"
+              onClick={() => selectBike("all")}
+            >
+              All bikes
+            </button>
+            {bikes.map((bike) => (
+              <button
+                key={bike.id}
+                className={`${styles.navTab} ${
+                  selectedBikeId === bike.id ? styles.navTabActive : ""
+                }`}
+                type="button"
+                onClick={() => selectBike(bike.id)}
+              >
+                {bike.name}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <p className="eyebrow">Account</p>
+          <h2 className={styles.sectionTitle}>{state.athleteName}</h2>
+          <div className={styles.compactStatList}>
+            <div className={styles.compactStatItem}>
+              <span className={styles.muted}>Rides</span>
+              <strong>{activities.length}</strong>
+            </div>
+            <div className={styles.compactStatItem}>
+              <span className={styles.muted}>Miles</span>
+              <strong>{formatMiles(totalRideMiles)}</strong>
+            </div>
+            <div className={styles.compactStatItem}>
+              <span className={styles.muted}>Alerts</span>
+              <strong>{filteredAlerts.length}</strong>
+            </div>
+          </div>
+          <Link className={styles.buttonGhost} href="/projects/cc-component-health/setup">
+            Manage bikes
+          </Link>
+        </section>
+      </aside>
+
+      <div className={styles.centerColumn}>
+        <section className={styles.panel}>
+          <div className={styles.pageHeader}>
+            <p className="eyebrow">Gear Health</p>
+            <h1 className={styles.pageTitle}>Current replacement timing</h1>
+            <p className={styles.sectionText}>
+              Bike-tagged rides keep wear current and attach retailer pricing to each part.
+            </p>
+          </div>
+
+          <div className={styles.summaryGrid}>
+            <div className={styles.summaryCard}>
+              <div className={styles.metricLabel}>Bikes tracked</div>
+              <div className={styles.statValue}>{bikes.length}</div>
+            </div>
+            <div className={styles.summaryCard}>
+              <div className={styles.metricLabel}>Components due soon</div>
+              <div className={styles.statValue}>{dueSoonCount}</div>
+            </div>
+            <div className={styles.summaryCard}>
+              <div className={styles.metricLabel}>Active alerts</div>
+              <div className={styles.statValue}>{filteredAlerts.length}</div>
+            </div>
+            <div className={styles.summaryCard}>
+              <div className={styles.metricLabel}>Partner retailers</div>
+              <div className={styles.statValue}>{retailers.length}</div>
+            </div>
+          </div>
+        </section>
+
+        <div className={styles.componentGrid}>
+          {filteredComponentHealth.map((item) => (
+            <ComponentCard
+              key={item.componentId}
+              component={item.component}
+              health={item}
+              preset={item.preset}
+            />
+          ))}
         </div>
       </div>
 
-      <div className={styles.cardHeader}>
-        <div>
-          <p className="eyebrow">Component Health</p>
-          <h2 className={styles.sectionTitle}>Remaining service life by wear item</h2>
-        </div>
-        <Link className={styles.buttonGhost} href="/projects/cc-component-health/alerts">
-          View alerts
-        </Link>
-      </div>
+      <aside className={styles.rightRail}>
+        <section className={styles.panel}>
+          <div className={styles.cardHeader}>
+            <div>
+              <p className="eyebrow">Alerts</p>
+              <h2 className={styles.sectionTitle}>Needs attention</h2>
+            </div>
+            <Link className={styles.buttonGhost} href="/projects/cc-component-health/alerts">
+              View all
+            </Link>
+          </div>
+          <div className={styles.railList}>
+            {filteredAlerts.slice(0, 3).map((alert) => (
+              <Link
+                key={alert.id}
+                className={styles.railListItem}
+                href={`/projects/cc-component-health/component/${alert.componentId}`}
+              >
+                <strong>{alert.componentLabel}</strong>
+                <span className={styles.muted}>{alert.bikeName}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
 
-      <div className={styles.componentGrid}>
-        {componentHealth.map((item) => (
-          <ComponentCard
-            key={item.componentId}
-            component={item.component}
-            health={item}
-            preset={item.preset}
-            onReplacementShopClick={() =>
-              trackEvent("shop_click_replacement", {
-                componentId: item.componentId,
-                source: "dashboard",
-                remainingPercent: item.remainingPercent
-              })
-            }
-          />
-        ))}
-      </div>
+        <section className={styles.panel}>
+          <p className="eyebrow">Replacement timing</p>
+          <h2 className={styles.sectionTitle}>Closest parts</h2>
+          <div className={styles.railList}>
+            {priorityItems.map((item) => (
+              <Link
+                key={item.componentId}
+                className={styles.railListItem}
+                href={`/projects/cc-component-health/component/${item.componentId}`}
+              >
+                <strong>{item.component.label}</strong>
+                <span className={styles.muted}>
+                  {item.bestPriceOffer
+                    ? `${item.bestPriceOffer.price.toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "USD"
+                      })} best price`
+                    : "Pricing unavailable"}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </aside>
     </section>
   );
 }

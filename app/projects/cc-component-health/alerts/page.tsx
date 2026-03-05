@@ -7,13 +7,20 @@ import { useDemoState } from "@/src/features/cc-component-health/context/DemoSta
 import styles from "@/src/features/cc-component-health/components/feature.module.css";
 
 export default function ComponentHealthAlertsPage() {
-  const { state, alerts, isSetupComplete } = useDemoState();
+  const {
+    state,
+    bikes,
+    selectedBikeId,
+    selectBike,
+    filteredAlerts,
+    isSetupComplete
+  } = useDemoState();
 
   if (!state.stravaConnected) {
     return (
       <EmptyState
-        title="Alerts are empty until a ride feed is connected."
-        description="The alerts list is derived from current remaining life thresholds and only appears after setup."
+        title="Alerts are unavailable until ride sync is active."
+        description="Gear Health derives alerts from bike-tagged ride mileage and current service thresholds."
         primaryHref="/projects/cc-component-health"
         primaryLabel="Open landing page"
       />
@@ -23,19 +30,19 @@ export default function ComponentHealthAlertsPage() {
   if (!isSetupComplete) {
     return (
       <EmptyState
-        title="No component setup yet."
-        description="Add a bike profile and wear items before expecting warning, critical, or expired alerts."
+        title="No tracked components yet."
+        description="Add bikes and component installs before expecting warning, critical, or expired alerts."
         primaryHref="/projects/cc-component-health/setup"
-        primaryLabel="Go to setup"
+        primaryLabel="Open setup"
       />
     );
   }
 
-  if (alerts.length === 0) {
+  if (filteredAlerts.length === 0) {
     return (
       <EmptyState
-        title="All components are healthy."
-        description="No warning, critical, or expired thresholds are active in the current demo state."
+        title="No alerts in the current bike view."
+        description="No warning, critical, or expired thresholds are active for the selected bike filter."
         primaryHref="/projects/cc-component-health/dashboard"
         primaryLabel="Open dashboard"
       />
@@ -43,25 +50,76 @@ export default function ComponentHealthAlertsPage() {
   }
 
   return (
-    <section className={styles.stack}>
-      <div className={styles.panel}>
-        <p className="eyebrow">Alert Queue</p>
-        <h2 className={styles.sectionTitle}>Prioritized maintenance interventions</h2>
-        <p className={styles.sectionText}>
-          Alerts are sorted by severity first and by the lowest remaining percentage second.
-        </p>
+    <section className={styles.desktopTwoCol}>
+      <div className={styles.centerColumn}>
+        <section className={styles.panel}>
+          <div className={styles.pageHeader}>
+            <p className="eyebrow">Alerts</p>
+            <h1 className={styles.pageTitle}>Active service queue</h1>
+            <p className={styles.sectionText}>
+              Alerts are ordered by severity and remaining life, with pricing attached
+              to each part.
+            </p>
+          </div>
+
+          <div className={styles.navTabs}>
+            <button
+              className={`${styles.navTab} ${selectedBikeId === "all" ? styles.navTabActive : ""}`}
+              type="button"
+              onClick={() => selectBike("all")}
+            >
+              All bikes
+            </button>
+            {bikes.map((bike) => (
+              <button
+                key={bike.id}
+                className={`${styles.navTab} ${
+                  selectedBikeId === bike.id ? styles.navTabActive : ""
+                }`}
+                type="button"
+                onClick={() => selectBike(bike.id)}
+              >
+                {bike.name}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <AlertList
+          alerts={filteredAlerts}
+          onAlertClick={(alert) =>
+            trackEvent("alert_clicked", {
+              componentId: alert.componentId,
+              bikeId: alert.bikeId,
+              catalogKey: alert.catalogKey,
+              price: alert.bestPriceStartingAt,
+              remainingMiles: alert.remainingMiles,
+              remainingPercent: alert.remainingPercent
+            })
+          }
+        />
       </div>
 
-      <AlertList
-        alerts={alerts}
-        onAlertClick={(alert) =>
-          trackEvent("alert_clicked", {
-            componentId: alert.componentId,
-            remainingMiles: alert.remainingMiles,
-            remainingPercent: alert.remainingPercent
-          })
-        }
-      />
+      <aside className={styles.rightRail}>
+        <section className={styles.panel}>
+          <p className="eyebrow">Current view</p>
+          <h2 className={styles.sectionTitle}>
+            {selectedBikeId === "all"
+              ? "All bikes"
+              : bikes.find((bike) => bike.id === selectedBikeId)?.name ?? "Bike"}
+          </h2>
+          <div className={styles.compactStatList}>
+            <div className={styles.compactStatItem}>
+              <span className={styles.muted}>Alerts shown</span>
+              <strong>{filteredAlerts.length}</strong>
+            </div>
+            <div className={styles.compactStatItem}>
+              <span className={styles.muted}>Bikes in account</span>
+              <strong>{bikes.length}</strong>
+            </div>
+          </div>
+        </section>
+      </aside>
     </section>
   );
 }

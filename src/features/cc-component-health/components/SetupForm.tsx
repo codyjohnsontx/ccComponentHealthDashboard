@@ -14,7 +14,7 @@ import styles from "@/src/features/cc-component-health/components/feature.module
 
 const bikeTemplate: BikeProfile = {
   id: "",
-  name: "Factor OSTRO VAM",
+  name: "New Bike",
   discipline: "road",
   wearSensitivity: "normal"
 };
@@ -22,20 +22,24 @@ const bikeTemplate: BikeProfile = {
 export function SetupForm() {
   const {
     state,
+    bikes,
     activities,
     totalRideMiles,
+    rideStatsByBike,
     saveBike,
     addComponent,
     addStarterKit,
     updateComponent
   } = useDemoState();
-  const [bikeDraft, setBikeDraft] = useState<BikeProfile>(state.bike ?? bikeTemplate);
+  const [bikeDrafts, setBikeDrafts] = useState<BikeProfile[]>(bikes);
   const [componentDrafts, setComponentDrafts] = useState<BikeComponent[]>(state.components);
+  const [presetBikeId, setPresetBikeId] = useState<string>(bikes[0]?.id ?? "");
 
   useEffect(() => {
-    setBikeDraft(state.bike ?? bikeTemplate);
+    setBikeDrafts(bikes);
     setComponentDrafts(state.components);
-  }, [state.bike, state.components]);
+    setPresetBikeId((current) => current || bikes[0]?.id || "");
+  }, [bikes, state.components]);
 
   const activityRange = useMemo(() => {
     if (activities.length === 0) {
@@ -45,21 +49,48 @@ export function SetupForm() {
     return `${activities[0].date} to ${activities[activities.length - 1].date}`;
   }, [activities]);
 
-  function handleSaveBike() {
+  function handleSaveBike(bikeId: string) {
+    const bike = bikeDrafts.find((draft) => draft.id === bikeId);
+
+    if (!bike) {
+      return;
+    }
+
     saveBike({
-      ...bikeDraft,
-      id: bikeDraft.id || crypto.randomUUID()
+      ...bike,
+      id: bike.id || crypto.randomUUID()
     });
+  }
+
+  function handleAddBikeDraft() {
+    const id = crypto.randomUUID();
+
+    setBikeDrafts((currentDrafts) => [
+      ...currentDrafts,
+      { ...bikeTemplate, id, name: `Bike ${currentDrafts.length + 1}` }
+    ]);
   }
 
   function handleAddPreset(presetType: string) {
     const preset = componentPresets.find((item) => item.type === presetType);
 
-    if (!preset) {
+    if (!preset || !presetBikeId) {
       return;
     }
 
-    addComponent(createComponentFromPreset(preset));
+    addComponent(createComponentFromPreset(preset, presetBikeId));
+  }
+
+  function updateBikeDraftValue<T extends keyof BikeProfile>(
+    bikeId: string,
+    field: T,
+    value: BikeProfile[T]
+  ) {
+    setBikeDrafts((currentDrafts) =>
+      currentDrafts.map((draft) =>
+        draft.id === bikeId ? { ...draft, [field]: value } : draft
+      )
+    );
   }
 
   function updateDraftValue<T extends keyof BikeComponent>(
@@ -87,11 +118,11 @@ export function SetupForm() {
   if (!state.stravaConnected) {
     return (
       <section className={styles.panel}>
-        <p className="eyebrow">Setup locked</p>
-        <h2 className={styles.sectionTitle}>Connect Strava before configuring the bike.</h2>
+        <p className="eyebrow">Ride sync required</p>
+        <h2 className={styles.sectionTitle}>Reconnect Strava before editing bike installs.</h2>
         <p className={styles.sectionText}>
-          The setup flow uses imported ride miles to compute service wear. Link the mock
-          account first, then return here to save your bike and add components.
+          Gear Health depends on ride attribution to keep bike-specific maintenance
+          timing accurate.
         </p>
         <Link className={styles.button} href="/projects/cc-component-health">
           Go to landing page
@@ -105,59 +136,100 @@ export function SetupForm() {
       <section className={styles.setupCard}>
         <div className={styles.cardHeader}>
           <div>
-            <p className="eyebrow">Bike Setup</p>
-            <h2 className={styles.sectionTitle}>Bike profile and wear sensitivity</h2>
+            <p className="eyebrow">Bikes</p>
+            <h2 className={styles.sectionTitle}>Manage the bikes on the Strava account</h2>
           </div>
-          <button className={styles.buttonSmall} type="button" onClick={handleSaveBike}>
-            Save bike
+          <button className={styles.buttonSmall} type="button" onClick={handleAddBikeDraft}>
+            Add bike
           </button>
         </div>
 
         <div className={styles.fieldList}>
-          <label className={styles.fieldRow}>
-            <span className={styles.fieldLabel}>Bike name</span>
-            <input
-              value={bikeDraft.name}
-              onChange={(event) =>
-                setBikeDraft((current) => ({ ...current, name: event.target.value }))
-              }
-            />
-          </label>
+          {bikeDrafts.map((bike) => (
+            <article key={bike.id} className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div>
+                  <p className="eyebrow">{bike.discipline}</p>
+                  <h3 className={styles.sectionTitle}>{bike.name}</h3>
+                </div>
+                <div className={styles.inlineActions}>
+                  <button
+                    className={styles.buttonSmall}
+                    type="button"
+                    onClick={() => handleSaveBike(bike.id)}
+                  >
+                    Save bike
+                  </button>
+                  <button
+                    className={styles.buttonGhost}
+                    type="button"
+                    onClick={() => addStarterKit(bike.id)}
+                  >
+                    Add starter kit
+                  </button>
+                </div>
+              </div>
 
-          <label className={styles.fieldRow}>
-            <span className={styles.fieldLabel}>Discipline</span>
-            <select
-              value={bikeDraft.discipline}
-              onChange={(event) =>
-                setBikeDraft((current) => ({
-                  ...current,
-                  discipline: event.target.value as BikeProfile["discipline"]
-                }))
-              }
-            >
-              <option value="road">Road</option>
-              <option value="gravel">Gravel</option>
-              <option value="track">Track</option>
-              <option value="triathlon">Triathlon</option>
-            </select>
-          </label>
+              <div className={styles.formGrid}>
+                <label className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>Bike name</span>
+                  <input
+                    value={bike.name}
+                    onChange={(event) =>
+                      updateBikeDraftValue(bike.id, "name", event.target.value)
+                    }
+                  />
+                </label>
 
-          <label className={styles.fieldRow}>
-            <span className={styles.fieldLabel}>Wear sensitivity</span>
-            <select
-              value={bikeDraft.wearSensitivity}
-              onChange={(event) =>
-                setBikeDraft((current) => ({
-                  ...current,
-                  wearSensitivity: event.target.value as BikeProfile["wearSensitivity"]
-                }))
-              }
-            >
-              <option value="conservative">Conservative</option>
-              <option value="normal">Normal</option>
-              <option value="aggressive">Aggressive</option>
-            </select>
-          </label>
+                <label className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>Discipline</span>
+                  <select
+                    value={bike.discipline}
+                    onChange={(event) =>
+                      updateBikeDraftValue(
+                        bike.id,
+                        "discipline",
+                        event.target.value as BikeProfile["discipline"]
+                      )
+                    }
+                  >
+                    <option value="road">Road</option>
+                    <option value="gravel">Gravel</option>
+                    <option value="track">Track</option>
+                    <option value="triathlon">Triathlon</option>
+                  </select>
+                </label>
+
+                <label className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>Wear sensitivity</span>
+                  <select
+                    value={bike.wearSensitivity}
+                    onChange={(event) =>
+                      updateBikeDraftValue(
+                        bike.id,
+                        "wearSensitivity",
+                        event.target.value as BikeProfile["wearSensitivity"]
+                      )
+                    }
+                  >
+                    <option value="conservative">Conservative</option>
+                    <option value="normal">Normal</option>
+                    <option value="aggressive">Aggressive</option>
+                  </select>
+                </label>
+
+                <div className={styles.stat}>
+                  <div className={styles.metricLabel}>Ride attribution</div>
+                  <div className={styles.statValue}>
+                    {rideStatsByBike[bike.id]?.count ?? 0} rides
+                  </div>
+                  <p className={styles.sectionText}>
+                    {formatMiles(rideStatsByBike[bike.id]?.miles ?? 0)}
+                  </p>
+                </div>
+              </div>
+            </article>
+          ))}
         </div>
 
         <hr className={styles.divider} />
@@ -170,13 +242,27 @@ export function SetupForm() {
       <section className={styles.setupCard}>
         <div className={styles.cardHeader}>
           <div>
-            <p className="eyebrow">Quick Add</p>
-            <h2 className={styles.sectionTitle}>Common performance-bike components</h2>
+            <p className="eyebrow">Component Library</p>
+            <h2 className={styles.sectionTitle}>Add installs to a specific bike</h2>
           </div>
-          <button className={styles.buttonSmall} type="button" onClick={addStarterKit}>
-            Add starter kit
-          </button>
+          <Link className={styles.buttonGhost} href="/projects/cc-component-health/dashboard">
+            Review dashboard
+          </Link>
         </div>
+
+        <label className={styles.fieldRow}>
+          <span className={styles.fieldLabel}>Target bike</span>
+          <select
+            value={presetBikeId}
+            onChange={(event) => setPresetBikeId(event.target.value)}
+          >
+            {bikes.map((bike) => (
+              <option key={bike.id} value={bike.id}>
+                {bike.name}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <div className={styles.fieldList}>
           {componentPresets.map((preset) => (
@@ -196,6 +282,8 @@ export function SetupForm() {
                   Add preset
                 </button>
               </div>
+
+              <p className={styles.sectionText}>{preset.replacementSearchLabel}</p>
               <ul className={styles.list}>
                 {preset.toolsNeeded.map((tool) => (
                   <li key={tool}>{tool}</li>
@@ -209,17 +297,17 @@ export function SetupForm() {
       <section className={styles.setupCard} style={{ gridColumn: "1 / -1" }}>
         <div className={styles.cardHeader}>
           <div>
-            <p className="eyebrow">Components</p>
-            <h2 className={styles.sectionTitle}>Editable installed parts</h2>
+            <p className="eyebrow">Installed Components</p>
+            <h2 className={styles.sectionTitle}>Edit wear inputs and bike assignment</h2>
           </div>
-          <Link className={styles.buttonGhost} href="/projects/cc-component-health/dashboard">
-            Review dashboard
+          <Link className={styles.buttonGhost} href="/projects/cc-component-health/alerts">
+            Review alerts
           </Link>
         </div>
 
         {componentDrafts.length === 0 ? (
           <p className={styles.sectionText}>
-            Add at least one component preset to generate wear health and alerts.
+            Add at least one component preset to restore full service tracking.
           </p>
         ) : (
           <div className={styles.fieldList}>
@@ -227,7 +315,9 @@ export function SetupForm() {
               <article key={component.id} className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div>
-                    <p className="eyebrow">{component.type}</p>
+                    <p className="eyebrow">
+                      {bikes.find((bike) => bike.id === component.bikeId)?.name ?? "Bike"}
+                    </p>
                     <h3 className={styles.sectionTitle}>{component.label}</h3>
                   </div>
                   <button
@@ -240,6 +330,22 @@ export function SetupForm() {
                 </div>
 
                 <div className={styles.formGrid}>
+                  <label className={styles.fieldRow}>
+                    <span className={styles.fieldLabel}>Bike</span>
+                    <select
+                      value={component.bikeId}
+                      onChange={(event) =>
+                        updateDraftValue(component.id, "bikeId", event.target.value)
+                      }
+                    >
+                      {bikes.map((bike) => (
+                        <option key={bike.id} value={bike.id}>
+                          {bike.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
                   <label className={styles.fieldRow}>
                     <span className={styles.fieldLabel}>Label</span>
                     <input

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Ride-Based Component Health",
-  description: "Demo MVP for ride-based cycling component tracking."
+  title: "Strava Gear Health",
+  description:
+    "Bike-tagged ride history translated into component wear tracking and retailer price comparison."
 };
 
 export default function RootLayout({

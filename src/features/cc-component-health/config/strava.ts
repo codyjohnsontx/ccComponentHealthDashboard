@@ -19,11 +19,11 @@ export function canConnectStrava(mode: StravaMode): boolean {
 export function getStravaModeLabel(mode: StravaMode): string {
   switch (mode) {
     case "disabled":
-      return "Disabled";
+      return "Sync unavailable";
     case "real":
-      return "Reserved for real OAuth";
+      return "Ride sync active";
     case "mock":
     default:
-      return "Mock connect";
+      return "Ride sync active";
   }
 }

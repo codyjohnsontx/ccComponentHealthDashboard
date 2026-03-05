@@ -15,7 +15,9 @@ export function buildCountdownSeries(
   const installDateMs = new Date(component.installDate).getTime();
   const multiplier = getSensitivityMultiplier(sensitivity);
   const relevantActivities = activities.filter(
-    (activity) => new Date(activity.date).getTime() >= installDateMs
+    (activity) =>
+      activity.bikeId === component.bikeId &&
+      new Date(activity.date).getTime() >= installDateMs
   );
 
   let cumulativeMiles = component.baselineMiles;
