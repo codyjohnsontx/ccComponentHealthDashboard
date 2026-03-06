@@ -5,7 +5,7 @@ import { loadDemoState } from "@/src/features/cc-component-health/lib/storage";
 import type { DemoState } from "@/src/features/cc-component-health/types";
 
 const STORAGE_KEY = "cc-component-health-demo-state";
-const STORAGE_SCHEMA_VERSION = 2;
+const STORAGE_SCHEMA_VERSION = 3;
 
 function installWindow(initialValue?: string) {
   const store = new Map<string, string>();
