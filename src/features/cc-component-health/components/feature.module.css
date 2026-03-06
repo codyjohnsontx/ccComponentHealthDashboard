@@ -369,7 +369,10 @@
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
-.componentGrid,
+.componentGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .alertGrid,
 .offerTable {
   grid-template-columns: 1fr;
@@ -651,8 +654,20 @@
 }
 
 .healthMeterStatus {
-  color: var(--accent);
+  color: var(--muted);
   font-weight: 700;
+}
+
+.healthMeterStatusWarning {
+  color: var(--warning);
+}
+
+.healthMeterStatusCritical {
+  color: var(--critical);
+}
+
+.healthMeterStatusExpired {
+  color: var(--expired);
 }
 
 .sparkline {
@@ -694,6 +709,58 @@
 .railListItem {
   display: grid;
   gap: 0.35rem;
+}
+
+.filterGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.filterPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.filterPill:hover {
+  border-color: rgba(252, 76, 2, 0.3);
+  color: var(--accent);
+}
+
+.filterPillActive {
+  background: var(--accent-soft);
+  border-color: rgba(252, 76, 2, 0.3);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.railListItemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.railListItemHeader .pill {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  min-height: 20px;
+  padding: 0 0.5rem;
 }
 
 .offerTable {
@@ -835,6 +902,7 @@
   .grid2,
   .grid3,
   .summaryGrid,
+  .componentGrid,
   .detailGrid,
   .formGrid,
   .statRow,

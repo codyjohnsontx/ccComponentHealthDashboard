@@ -2,11 +2,12 @@ import type { BikeComponent, BikeProfile, DemoState } from "@/src/features/cc-co
 
 export const SEEDED_BIKE_IDS = {
   road: "bike-factor-ostro",
-  gravel: "bike-cervelo-aspero"
+  gravel: "bike-specialized-crux"
 } as const;
 
 export const SEEDED_COMPONENT_IDS = {
   roadChain: "component-road-chain",
+  roadFrontTire: "component-road-front-tire",
   roadRearTire: "component-road-rear-tire",
   roadBrakePads: "component-road-brake-pads",
   roadCassette: "component-road-cassette",
@@ -23,7 +24,7 @@ const seededBikes: BikeProfile[] = [
   },
   {
     id: SEEDED_BIKE_IDS.gravel,
-    name: "Cervelo Aspero",
+    name: "Specialized Crux",
     discipline: "gravel",
     wearSensitivity: "normal"
   }
@@ -41,6 +42,20 @@ const seededComponents: BikeComponent[] = [
     catalogKey: "road-chain",
     replacementSearchLabel: "12-speed road chain",
     notes: "Primary drivetrain chain for race-week road volume.",
+    replacementCount: 0
+  },
+  {
+    id: SEEDED_COMPONENT_IDS.roadFrontTire,
+    bikeId: SEEDED_BIKE_IDS.road,
+    type: "front-tire",
+    label: "Front Tire",
+    serviceLifeMiles: 2500,
+    installDate: "2026-02-20",
+    baselineMiles: 0,
+    position: "front",
+    catalogKey: "road-front-tire",
+    replacementSearchLabel: "700x28 front road tire",
+    notes: "New front tire installed for spring training block.",
     replacementCount: 0
   },
   {
@@ -118,7 +133,7 @@ export function createSeededDemoState(): DemoState {
     stravaMode: "mock",
     athleteName: "Avery Rider",
     bikes: seededBikes.map((bike) => ({ ...bike })),
-    selectedBikeId: "all",
+    selectedBikeId: SEEDED_BIKE_IDS.road,
     components: seededComponents.map((component) => ({ ...component }))
   };
 }

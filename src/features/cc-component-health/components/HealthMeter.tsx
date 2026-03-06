@@ -52,7 +52,19 @@ export function HealthMeter({
             {formatPercent(remainingPercent)} remaining
           </p>
         </div>
-        <p className={styles.healthMeterStatus}>{statusLabel}</p>
+        <p
+          className={`${styles.healthMeterStatus} ${
+            alertLevel === "warning"
+              ? styles.healthMeterStatusWarning
+              : alertLevel === "critical"
+                ? styles.healthMeterStatusCritical
+                : alertLevel === "expired"
+                  ? styles.healthMeterStatusExpired
+                  : ""
+          }`}
+        >
+          {statusLabel}
+        </p>
       </div>
     </div>
   );

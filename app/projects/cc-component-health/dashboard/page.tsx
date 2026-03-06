@@ -7,8 +7,7 @@ import { trackEvent } from "@/src/features/cc-component-health/analytics/trackEv
 import { ComponentCard } from "@/src/features/cc-component-health/components/ComponentCard";
 import { EmptyState } from "@/src/features/cc-component-health/components/EmptyState";
 import { useDemoState } from "@/src/features/cc-component-health/context/DemoStateProvider";
-import { retailers } from "@/src/features/cc-component-health/data/retailers";
-import { formatMiles } from "@/src/features/cc-component-health/lib/formatting";
+import { formatCurrency, formatMiles } from "@/src/features/cc-component-health/lib/formatting";
 import styles from "@/src/features/cc-component-health/components/feature.module.css";
 
 const emittedDashboardEvents = new Set<string>();
@@ -88,19 +87,21 @@ export default function ComponentHealthDashboardPage() {
   const dueSoonCount = filteredComponentHealth.filter(
     (item) => item.alertLevel !== "none"
   ).length;
+  const spendAtRisk = filteredComponentHealth
+    .filter((item) => item.alertLevel !== "none" && item.bestPriceOffer)
+    .reduce((sum, item) => sum + (item.bestPriceOffer?.price ?? 0), 0);
   const priorityItems = [...filteredComponentHealth]
     .sort((left, right) => left.remainingPercent - right.remainingPercent)
-    .slice(0, 3);
+    .slice(0, 5);
 
   return (
     <section className={styles.desktopThreeCol}>
       <aside className={styles.leftRail}>
         <section className={styles.panel}>
           <p className="eyebrow">Bike filters</p>
-          <h2 className={styles.sectionTitle}>Current view</h2>
-          <div className={styles.navTabs}>
+          <div className={styles.filterGroup}>
             <button
-              className={`${styles.navTab} ${selectedBikeId === "all" ? styles.navTabActive : ""}`}
+              className={`${styles.filterPill} ${selectedBikeId === "all" ? styles.filterPillActive : ""}`}
               type="button"
               onClick={() => selectBike("all")}
             >
@@ -109,8 +110,8 @@ export default function ComponentHealthDashboardPage() {
             {bikes.map((bike) => (
               <button
                 key={bike.id}
-                className={`${styles.navTab} ${
-                  selectedBikeId === bike.id ? styles.navTabActive : ""
+                className={`${styles.filterPill} ${
+                  selectedBikeId === bike.id ? styles.filterPillActive : ""
                 }`}
                 type="button"
                 onClick={() => selectBike(bike.id)}
@@ -168,8 +169,10 @@ export default function ComponentHealthDashboardPage() {
               <div className={styles.statValue}>{filteredAlerts.length}</div>
             </div>
             <div className={styles.summaryCard}>
-              <div className={styles.metricLabel}>Partner retailers</div>
-              <div className={styles.statValue}>{retailers.length}</div>
+              <div className={styles.metricLabel}>Spend at risk</div>
+              <div className={styles.statValue}>
+                {spendAtRisk > 0 ? formatCurrency(spendAtRisk) : "—"}
+              </div>
             </div>
           </div>
         </section>
@@ -190,30 +193,15 @@ export default function ComponentHealthDashboardPage() {
         <section className={styles.panel}>
           <div className={styles.cardHeader}>
             <div>
-              <p className="eyebrow">Alerts</p>
-              <h2 className={styles.sectionTitle}>Needs attention</h2>
+              <p className="eyebrow">Replacement timing</p>
+              <h2 className={styles.sectionTitle}>Priority parts</h2>
             </div>
-            <Link className={styles.buttonGhost} href="/projects/cc-component-health/alerts">
-              View all
-            </Link>
-          </div>
-          <div className={styles.railList}>
-            {filteredAlerts.slice(0, 3).map((alert) => (
-              <Link
-                key={alert.id}
-                className={styles.railListItem}
-                href={`/projects/cc-component-health/component/${alert.componentId}`}
-              >
-                <strong>{alert.componentLabel}</strong>
-                <span className={styles.muted}>{alert.bikeName}</span>
+            {filteredAlerts.length > 0 && (
+              <Link className={styles.buttonGhost} href="/projects/cc-component-health/alerts">
+                Alerts
               </Link>
-            ))}
+            )}
           </div>
-        </section>
-
-        <section className={styles.panel}>
-          <p className="eyebrow">Replacement timing</p>
-          <h2 className={styles.sectionTitle}>Closest parts</h2>
           <div className={styles.railList}>
             {priorityItems.map((item) => (
               <Link
@@ -221,14 +209,29 @@ export default function ComponentHealthDashboardPage() {
                 className={styles.railListItem}
                 href={`/projects/cc-component-health/component/${item.componentId}`}
               >
-                <strong>{item.component.label}</strong>
+                <div className={styles.railListItemHeader}>
+                  <strong>{item.component.label}</strong>
+                  {item.alertLevel !== "none" && (
+                    <span
+                      className={`${styles.pill} ${
+                        item.alertLevel === "expired"
+                          ? styles.pillExpired
+                          : item.alertLevel === "critical"
+                            ? styles.pillCritical
+                            : styles.pillWarning
+                      }`}
+                    >
+                      {item.alertLevel}
+                    </span>
+                  )}
+                </div>
                 <span className={styles.muted}>
                   {item.bestPriceOffer
                     ? `${item.bestPriceOffer.price.toLocaleString("en-US", {
                         style: "currency",
                         currency: "USD"
-                      })} best price`
-                    : "Pricing unavailable"}
+                      })} best price · ${Math.round(item.remainingPercent * 100)}% left`
+                    : `${Math.round(item.remainingPercent * 100)}% remaining`}
                 </span>
               </Link>
             ))}

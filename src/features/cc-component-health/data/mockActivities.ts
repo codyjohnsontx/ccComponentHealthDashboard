@@ -51,7 +51,7 @@ export const mockActivities: Activity[] = [
   },
   {
     id: "ride-007",
-    bikeId: "bike-cervelo-aspero",
+    bikeId: "bike-specialized-crux",
     date: "2025-10-25",
     distanceMiles: 53.9,
     title: "Fire Road Exploration",
@@ -99,7 +99,7 @@ export const mockActivities: Activity[] = [
   },
   {
     id: "ride-013",
-    bikeId: "bike-cervelo-aspero",
+    bikeId: "bike-specialized-crux",
     date: "2025-12-09",
     distanceMiles: 18.9,
     title: "Trail Connector Spin",
@@ -115,7 +115,7 @@ export const mockActivities: Activity[] = [
   },
   {
     id: "ride-015",
-    bikeId: "bike-cervelo-aspero",
+    bikeId: "bike-specialized-crux",
     date: "2025-12-21",
     distanceMiles: 43.7,
     title: "Holiday Gravel Ramble",
@@ -147,7 +147,7 @@ export const mockActivities: Activity[] = [
   },
   {
     id: "ride-019",
-    bikeId: "bike-cervelo-aspero",
+    bikeId: "bike-specialized-crux",
     date: "2026-01-20",
     distanceMiles: 52.2,
     title: "Mixed Surface Endurance",
@@ -155,7 +155,7 @@ export const mockActivities: Activity[] = [
   },
   {
     id: "ride-020",
-    bikeId: "bike-cervelo-aspero",
+    bikeId: "bike-specialized-crux",
     date: "2026-01-28",
     distanceMiles: 24.6,
     title: "Recovery Dirt Loop",
@@ -171,7 +171,7 @@ export const mockActivities: Activity[] = [
   },
   {
     id: "ride-022",
-    bikeId: "bike-cervelo-aspero",
+    bikeId: "bike-specialized-crux",
     date: "2026-02-09",
     distanceMiles: 39.5,
     title: "Torque on Gravel",
@@ -187,7 +187,7 @@ export const mockActivities: Activity[] = [
   },
   {
     id: "ride-024",
-    bikeId: "bike-cervelo-aspero",
+    bikeId: "bike-specialized-crux",
     date: "2026-02-24",
     distanceMiles: 44.8,
     title: "Final Gravel Tune-Up",
