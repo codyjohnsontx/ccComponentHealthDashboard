@@ -14,6 +14,8 @@ import {
   formatDate,
   formatDateTime,
   formatMiles,
+  formatMatchConfidence,
+  formatOfferFreshness,
   formatPercent
 } from "@/src/features/cc-component-health/lib/formatting";
 import styles from "@/src/features/cc-component-health/components/feature.module.css";
@@ -24,11 +26,16 @@ const viewedOfferPanels = new Set<string>();
 export default function ComponentHealthDetailPage() {
   const params = useParams<{ id: string }>();
   const componentId = params.id;
-  const { state, getComponentById, getHealthByComponentId, markComponentReplaced } =
-    useDemoState();
+  const {
+    state,
+    getComponentDetailSnapshot,
+    markComponentReplaced,
+    recordAffiliateClick
+  } = useDemoState();
 
-  const component = getComponentById(componentId);
-  const health = getHealthByComponentId(componentId);
+  const detailSnapshot = getComponentDetailSnapshot(componentId);
+  const component = detailSnapshot.component;
+  const health = detailSnapshot.health;
   const pricingSectionRef = useRef<HTMLElement | null>(null);
 
   function scrollToPricing() {
@@ -155,6 +162,17 @@ export default function ComponentHealthDetailPage() {
         <section className={styles.detailCard}>
           <div className={styles.cardHeader}>
             <div>
+              <p className="eyebrow">Why it is here</p>
+              <h2 className={styles.sectionTitle}>Replacement rationale</h2>
+            </div>
+          </div>
+
+          <p className={styles.sectionText}>{health.replacementReason}</p>
+        </section>
+
+        <section className={styles.detailCard}>
+          <div className={styles.cardHeader}>
+            <div>
               <p className="eyebrow">Wear trend</p>
               <h2 className={styles.sectionTitle}>Remaining miles across ride history</h2>
             </div>
@@ -225,6 +243,7 @@ export default function ComponentHealthDetailPage() {
             <span>Shipping</span>
             <span>Delivered total</span>
             <span>Availability</span>
+            <span>Fit / freshness</span>
             <span />
           </div>
 
@@ -286,13 +305,33 @@ export default function ComponentHealthDetailPage() {
                       </span>
                     </div>
 
+                    <div className={styles.offerCell}>
+                      <span className={styles.metricLabel}>Fit / freshness</span>
+                      <strong className={styles.offerCellValue}>
+                        {formatMatchConfidence(offer.matchConfidence)}
+                      </strong>
+                      <span className={styles.muted}>
+                        {formatOfferFreshness(offer.freshness)}
+                      </span>
+                    </div>
+
                     <div className={styles.offerCtaCell}>
                       <a
                         className={styles.button}
                         href={offer.affiliateUrl}
                         target="_blank"
                         rel="noreferrer"
-                        onClick={() =>
+                        onClick={() => {
+                          recordAffiliateClick({
+                            componentId: component.id,
+                            retailerId: offer.retailerId,
+                            offerId: offer.id,
+                            surface: "detail",
+                            catalogKey: health.catalogKey,
+                            price: offer.price,
+                            totalPrice: offer.totalPrice
+                          });
+
                           trackEvent("affiliate_click", {
                             componentId: component.id,
                             bikeId: health.bikeId,
@@ -301,8 +340,8 @@ export default function ComponentHealthDetailPage() {
                             price: offer.price,
                             totalPrice: offer.totalPrice,
                             remainingPercent: health.remainingPercent
-                          })
-                        }
+                          });
+                        }}
                       >
                         Buy
                       </a>
@@ -314,6 +353,7 @@ export default function ComponentHealthDetailPage() {
                       {retailer?.shippingPolicySummary ?? "Shipping details unavailable."}
                     </span>
                     <span className={styles.muted}>
+                      {offer.fitNotes[0] ?? "Check listing details before purchase."} ·{" "}
                       Last checked {formatDateTime(offer.lastCheckedAt)}
                     </span>
                   </div>
@@ -323,8 +363,7 @@ export default function ComponentHealthDetailPage() {
           </div>
 
           <p className={styles.sectionText}>
-            Prices and availability are based on the latest partner data and may change.
-            Purchases through partner links may earn Strava a commission.
+            {detailSnapshot.affiliateDisclosure}
           </p>
         </section>
       </div>
@@ -350,6 +389,17 @@ export default function ComponentHealthDetailPage() {
             <li>Baseline miles: {formatMiles(component.baselineMiles)}</li>
             <li>Raw miles since install: {formatMiles(health.rawMilesSinceInstall)}</li>
             <li>Notes: {component.notes?.trim() || "No notes added"}</li>
+          </ul>
+
+          <hr className={styles.divider} />
+
+          <p className={styles.sectionText}>Service history</p>
+          <ul className={styles.list}>
+            {detailSnapshot.serviceHistory.map((event) => (
+              <li key={event.id}>
+                {formatDate(event.date)} · {event.type} · {formatMiles(event.mileageAtService)}
+              </li>
+            ))}
           </ul>
 
           <hr className={styles.divider} />

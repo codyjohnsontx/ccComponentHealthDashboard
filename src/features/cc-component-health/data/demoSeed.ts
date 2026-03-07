@@ -1,4 +1,9 @@
-import type { BikeComponent, BikeProfile, DemoState } from "@/src/features/cc-component-health/types";
+import type {
+  BikeComponent,
+  BikeProfile,
+  DemoState,
+  ServiceEvent
+} from "@/src/features/cc-component-health/types";
 
 export const SEEDED_BIKE_IDS = {
   road: "bike-factor-ostro",
@@ -11,7 +16,11 @@ export const SEEDED_COMPONENT_IDS = {
   roadRearTire: "component-road-rear-tire",
   roadBrakePads: "component-road-brake-pads",
   roadCassette: "component-road-cassette",
+  gravelChain: "component-gravel-chain",
   gravelFrontTire: "component-gravel-front-tire",
+  gravelRearTire: "component-gravel-rear-tire",
+  gravelBrakePads: "component-gravel-brake-pads",
+  gravelCassette: "component-gravel-cassette",
   gravelBarTape: "component-gravel-bar-tape"
 } as const;
 
@@ -99,6 +108,19 @@ const seededComponents: BikeComponent[] = [
     replacementCount: 0
   },
   {
+    id: SEEDED_COMPONENT_IDS.gravelChain,
+    bikeId: SEEDED_BIKE_IDS.gravel,
+    type: "chain",
+    label: "Gravel Chain",
+    serviceLifeMiles: 2800,
+    installDate: "2025-10-25",
+    baselineMiles: 1900,
+    catalogKey: "gravel-chain",
+    replacementSearchLabel: "12-speed gravel chain",
+    notes: "Drivetrain chain carrying the bulk of mixed-surface mileage.",
+    replacementCount: 0
+  },
+  {
     id: SEEDED_COMPONENT_IDS.gravelFrontTire,
     bikeId: SEEDED_BIKE_IDS.gravel,
     type: "front-tire",
@@ -113,6 +135,46 @@ const seededComponents: BikeComponent[] = [
     replacementCount: 0
   },
   {
+    id: SEEDED_COMPONENT_IDS.gravelRearTire,
+    bikeId: SEEDED_BIKE_IDS.gravel,
+    type: "rear-tire",
+    label: "Gravel Rear Tire",
+    serviceLifeMiles: 1700,
+    installDate: "2025-10-25",
+    baselineMiles: 1280,
+    position: "rear",
+    catalogKey: "gravel-rear-tire",
+    replacementSearchLabel: "700x40 rear gravel tire",
+    notes: "Rear tire taking the brunt of loose-surface climbing and descending.",
+    replacementCount: 0
+  },
+  {
+    id: SEEDED_COMPONENT_IDS.gravelBrakePads,
+    bikeId: SEEDED_BIKE_IDS.gravel,
+    type: "brake-pads",
+    label: "Brake Pads",
+    serviceLifeMiles: 1400,
+    installDate: "2026-01-20",
+    baselineMiles: 720,
+    catalogKey: "gravel-brake-pads",
+    replacementSearchLabel: "SRAM-compatible gravel disc brake pads",
+    notes: "Fresh enough for the current block, but tracked for longer gravel descents.",
+    replacementCount: 0
+  },
+  {
+    id: SEEDED_COMPONENT_IDS.gravelCassette,
+    bikeId: SEEDED_BIKE_IDS.gravel,
+    type: "cassette",
+    label: "Gravel Cassette",
+    serviceLifeMiles: 6000,
+    installDate: "2025-10-25",
+    baselineMiles: 2100,
+    catalogKey: "gravel-cassette",
+    replacementSearchLabel: "12-speed gravel cassette",
+    notes: "Wide-range cassette still sitting comfortably inside its wear window.",
+    replacementCount: 0
+  },
+  {
     id: SEEDED_COMPONENT_IDS.gravelBarTape,
     bikeId: SEEDED_BIKE_IDS.gravel,
     type: "bar-tape-grips",
@@ -120,12 +182,23 @@ const seededComponents: BikeComponent[] = [
     serviceLifeMiles: 3500,
     installDate: "2025-11-16",
     baselineMiles: 1400,
-    catalogKey: "bar-tape",
+    catalogKey: "gravel-bar-tape",
     replacementSearchLabel: "Performance gravel bar tape",
     notes: "Still comfortable, but visible wear from long gravel days.",
     replacementCount: 0
   }
 ];
+
+const seededServiceEvents: ServiceEvent[] = seededComponents.map((component) => ({
+  id: `service-install-${component.id}`,
+  componentId: component.id,
+  bikeId: component.bikeId,
+  type: "installed",
+  date: component.installDate,
+  mileageAtService: component.baselineMiles,
+  notes: component.notes,
+  source: "seeded"
+}));
 
 export function createSeededDemoState(): DemoState {
   return {
@@ -134,6 +207,8 @@ export function createSeededDemoState(): DemoState {
     athleteName: "Avery Rider",
     bikes: seededBikes.map((bike) => ({ ...bike })),
     selectedBikeId: SEEDED_BIKE_IDS.road,
-    components: seededComponents.map((component) => ({ ...component }))
+    components: seededComponents.map((component) => ({ ...component })),
+    serviceEvents: seededServiceEvents.map((event) => ({ ...event })),
+    affiliateClicks: []
   };
 }

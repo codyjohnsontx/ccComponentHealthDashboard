@@ -1,13 +1,16 @@
 import { FeatureShell } from "@/src/features/cc-component-health/components/FeatureShell";
 import { DemoStateProvider } from "@/src/features/cc-component-health/context/DemoStateProvider";
+import { getFeatureBootstrap } from "@/src/features/cc-component-health/server/queries/getGearHealthSnapshots";
 
-export default function ComponentHealthLayout({
+export default async function ComponentHealthLayout({
   children
 }: {
   children: React.ReactNode;
 }) {
+  const initialBootstrap = await getFeatureBootstrap();
+
   return (
-    <DemoStateProvider>
+    <DemoStateProvider initialBootstrap={initialBootstrap}>
       <FeatureShell>{children}</FeatureShell>
     </DemoStateProvider>
   );

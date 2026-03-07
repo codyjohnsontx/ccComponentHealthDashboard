@@ -6,34 +6,15 @@ import { HealthMeter } from "@/src/features/cc-component-health/components/Healt
 import { formatCurrency, formatMiles } from "@/src/features/cc-component-health/lib/formatting";
 import type {
   BikeComponent,
-  ComponentHealth,
   ComponentPreset,
-  OfferSummary,
-  RetailerOffer
+  ResolvedComponentHealth
 } from "@/src/features/cc-component-health/types";
 import styles from "@/src/features/cc-component-health/components/feature.module.css";
 
 interface ComponentCardProps {
   component: BikeComponent;
-  health: ComponentHealth & {
-    bikeName: string;
-    bestPriceOffer: RetailerOffer | null;
-    offerSummary: OfferSummary;
-  };
+  health: ResolvedComponentHealth;
   preset?: ComponentPreset;
-}
-
-function alertClass(alertLevel: ComponentHealth["alertLevel"]) {
-  switch (alertLevel) {
-    case "warning":
-      return styles.pillWarning;
-    case "critical":
-      return styles.pillCritical;
-    case "expired":
-      return styles.pillExpired;
-    default:
-      return "";
-  }
 }
 
 export function ComponentCard({
@@ -41,22 +22,20 @@ export function ComponentCard({
   health,
   preset
 }: ComponentCardProps) {
+  const metadata = [
+    `Service life ${formatMiles(component.serviceLifeMiles)}`,
+    component.position
+      ? `${component.position[0].toUpperCase()}${component.position.slice(1)}`
+      : null,
+    preset ? `${preset.toolsNeeded.length} tools` : null
+  ].filter(Boolean) as string[];
+
   return (
     <article className={styles.card}>
-      <div className={styles.cardHeader}>
+      <div className={`${styles.cardHeader} ${styles.componentCardHeader}`}>
         <div>
           <p className="eyebrow">{health.bikeName}</p>
           <h3 className={styles.sectionTitle}>{component.label}</h3>
-        </div>
-        <div className={styles.componentMeta}>
-          {health.alertLevel !== "none" ? (
-            <span className={`${styles.pill} ${alertClass(health.alertLevel)}`}>
-              {health.alertLevel}
-            </span>
-          ) : null}
-          {health.bestPriceOffer ? (
-            <span className={`${styles.pill} ${styles.pillSuccess}`}>Best price</span>
-          ) : null}
         </div>
       </div>
 
@@ -80,13 +59,8 @@ export function ComponentCard({
         </div>
       </div>
 
-      <div className={styles.componentMeta}>
-        <span className={styles.pill}>
-          Service life {formatMiles(component.serviceLifeMiles)}
-        </span>
-        {component.position ? <span className={styles.pill}>{component.position}</span> : null}
-        {preset ? <span className={styles.pill}>{preset.toolsNeeded.length} tools</span> : null}
-      </div>
+      <p className={styles.componentMetaText}>{metadata.join(" · ")}</p>
+      <p className={styles.sectionText}>{health.replacementReason}</p>
 
       <div className={styles.cardFooter}>
         <Link

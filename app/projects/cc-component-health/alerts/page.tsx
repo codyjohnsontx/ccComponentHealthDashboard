@@ -8,13 +8,17 @@ import styles from "@/src/features/cc-component-health/components/feature.module
 
 export default function ComponentHealthAlertsPage() {
   const {
-    state,
+    alertsSnapshot,
+    selectBike,
+    state
+  } = useDemoState();
+  const {
     bikes,
     selectedBikeId,
-    selectBike,
     filteredAlerts,
-    isSetupComplete
-  } = useDemoState();
+    isSetupComplete,
+    activeBikeName
+  } = alertsSnapshot;
 
   if (!state.stravaConnected) {
     return (
@@ -103,11 +107,7 @@ export default function ComponentHealthAlertsPage() {
       <aside className={styles.rightRail}>
         <section className={styles.panel}>
           <p className="eyebrow">Current view</p>
-          <h2 className={styles.sectionTitle}>
-            {selectedBikeId === "all"
-              ? "All bikes"
-              : bikes.find((bike) => bike.id === selectedBikeId)?.name ?? "Bike"}
-          </h2>
+          <h2 className={styles.sectionTitle}>{activeBikeName}</h2>
           <div className={styles.compactStatList}>
             <div className={styles.compactStatItem}>
               <span className={styles.muted}>Alerts shown</span>

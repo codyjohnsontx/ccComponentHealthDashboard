@@ -1,27 +1,96 @@
 # Strava Gear Health
 
-A feature concept for Strava that turns bike-tagged ride history into component wear tracking, maintenance alerts, and retailer price comparison for replacement parts.
+Gear Health is a Strava feature concept that turns bike-tagged ride history into component wear tracking, replace-soon alerts, and affiliate-driven retailer price comparison.
 
-## What It Is
+This repo is a portfolio-grade web MVP for the idea. It is intentionally built with mocked retailer offers and a local demo persistence layer, but the architecture now includes clean seams for future Strava sync, partner feeds, and server-backed storage.
 
-Strava already lets riders attach multiple bikes to an account and choose which bike was used for each ride. Gear Health extends that behavior into a maintenance and commerce product:
+## Product Thesis
 
-- track service life per bike and per component
-- surface warning, critical, and expired wear states automatically
-- compare current part pricing across partner retailers
-- send users to retailer pages through affiliate-style outbound links
+### Executive context
 
-The portfolio build is pre-seeded on first load, so the feature opens with two bikes, active wear states, and current cached offer snapshots already visible.
+Strava leadership wants to fund training-platform expansion with a low-cost, high-yield revenue stream that uses behavior the product already owns.
 
-## Why It Matters
+Strava already knows:
 
-For riders, the feature reduces guesswork around when to replace wear items and where to buy them.
+- which bike a rider used
+- how many miles they have put on it
+- which cyclists are highly engaged
 
-For Strava, it creates a monetizable replacement-intent surface without needing to own inventory. The pricing layer is modeled after comparison products like PCPartPicker: show multiple retailers, current listed price, delivered total, and stock status in one place.
+Cyclists replace chains, tires, brake pads, cassettes, and bar tape on a recurring cadence. That creates a high-intent moment where users want to know:
 
-## Product Walkthrough
+- is this part due soon?
+- what should I buy?
+- who has the best price right now?
 
-Routes:
+Gear Health uses that moment to create rider value and monetizable outbound commerce.
+
+### Problem
+
+Strava has strong ride and bike data, but limited revenue surfaces tied to real cyclist intent between activities.
+
+### Opportunity
+
+Create a feature that:
+
+- derives gear wear from bike-specific ride mileage
+- surfaces replace-soon moments at useful thresholds
+- compares retailer pricing for the likely replacement
+- monetizes via affiliate referrals and retailer partnerships
+
+## Goals
+
+### Business goals
+
+- Generate incremental affiliate revenue from cyclists already showing replacement intent
+- Increase retention by making Strava more useful between rides
+
+### User goals
+
+- Know when a component is likely due for replacement
+- Find the best price quickly across trusted retailers
+- Reduce friction by showing fit signals, service context, and tools needed
+
+### Non-goals for this MVP
+
+- Perfect compatibility across every bike standard
+- Predictive wear based on terrain, weather, or drivetrain telemetry
+- In-app checkout or inventory ownership
+
+## Success Metrics
+
+### Primary
+
+- Affiliate revenue per monthly active cyclist
+
+### Secondary
+
+- Activation: percent of users who set up at least one bike and add at least three components
+- Engagement: weekly Gear Health dashboard views
+- Commerce: outbound click-through rate to retailers
+- Conversion proxy: attributed orders or retailer conversion pings where available
+- Retention lift: 30/60 day retention for Gear Health users versus control
+
+## What Ships In This Repo
+
+This repo implements the web MVP path of the concept.
+
+### Current user experience
+
+- Gear Health landing page with account summary, urgent replacement preview, and alert queue
+- Dashboard with bike filtering, wear state summaries, and prioritized components
+- Component detail page with:
+  - remaining life chart
+  - replacement rationale
+  - compatibility-aware offer comparison
+  - offer freshness and fit confidence labels
+  - tools list
+  - service history
+  - affiliate click tracking
+- Alerts view for replace-soon parts
+- Setup flow for bikes, tracked components, and starter-kit presets
+- Replace action that resets lifecycle and appends service history
+
+### Current routes
 
 - `/projects/cc-component-health`
 - `/projects/cc-component-health/setup`
@@ -29,41 +98,78 @@ Routes:
 - `/projects/cc-component-health/component/[id]`
 - `/projects/cc-component-health/alerts`
 
-Suggested review flow:
+### Suggested review flow
 
 1. Open `/projects/cc-component-health`
-2. Review the seeded Strava account snapshot and pricing preview
+2. Review the seeded account and current replacement opportunities
 3. Open `/projects/cc-component-health/dashboard`
-4. Filter between bikes and inspect active wear states
-5. Open a component detail page to compare retailer offers
-6. Visit `/projects/cc-component-health/alerts` to review prioritized replacements
-7. Use `/projects/cc-component-health/setup` to edit bikes, installs, and attribution inputs
+4. Filter between bikes and inspect replace-soon items
+5. Open a component detail page and compare retailer offers
+6. Visit `/projects/cc-component-health/alerts`
+7. Use `/projects/cc-component-health/setup` to edit bikes and installs
 
-## Feature Highlights
+## MVP Scope Alignment
 
-- Multi-bike Strava account model with ride attribution by `bikeId`
-- Seeded road and gravel bikes with varied wear states
-- Ride-based service-life calculations and alert thresholds
-- Dashboard health meters for quick scanning
-- Retailer comparison on each component detail page
-- Best-price and lowest-delivered offer ranking
-- Subtle affiliate disclosure for partner outbound links
-- localStorage persistence with reset-to-defaults behavior
-- Mocked analytics hooks via `console.log`
-- Unit coverage for wear logic, storage fallback, offer ranking, and seeded state integrity
+The implementation currently covers:
 
-## Technical Approach
+- Gear Health section on web
+- bikes plus components data model
+- ride mileage attribution by bike
+- replace-soon thresholds at 25%, 10%, and 0%
+- mocked offer comparison with pluggable provider boundaries
+- affiliate click logging endpoint
+- service history tracking when a user marks a component replaced
 
-The app is built in Next.js App Router with the feature isolated under `src/features/cc-component-health`.
+The implementation intentionally does not yet include:
 
-Key implementation choices:
+- real Strava OAuth or activity sync
+- live retailer feeds
+- price alerts
+- sponsored placements
+- push/email messaging
+- server-backed Postgres persistence
 
-- no external state library
-- no chart dependency
-- client-driven state persisted in `localStorage`
-- seeded first-run state instead of a blank onboarding funnel
-- cached offer snapshots instead of live scrapers
-- lightweight API route contract for future server-backed pricing
+## Stack
+
+- Next.js 15 App Router
+- React 19
+- TypeScript
+- CSS Modules
+- Vitest
+- Playwright
+- Zod
+- Husky + lint-staged + GitHub Actions
+
+## Architecture
+
+The feature is isolated under `src/features/cc-component-health`.
+
+### Current layering
+
+- `domain/`
+  - shared types
+  - compatibility logic
+  - offer ranking and matching
+  - snapshot builders for landing, dashboard, alerts, and component detail
+- `schemas/`
+  - `zod` validation for persisted state and route contracts
+- `adapters/mock/`
+  - seeded demo state, activities, and offer bootstrap
+- `adapters/local/`
+  - browser `localStorage` persistence for demo mode
+- `server/queries/`
+  - read-model builders for route snapshots
+- `server/mutations/`
+  - replacement logging, setup save validation, affiliate click recording
+- `context/`
+  - thin client provider that hydrates persisted demo state and wires UI actions
+
+### Key implementation decisions
+
+- Keep the feature portfolio-friendly with mocked data, but isolate real-integration seams now
+- Use server-produced bootstrap data plus client rehydration for local demo persistence
+- Keep sorting user-first: best price first, compatibility-aware, and freshness-aware
+- Avoid claiming guaranteed fit; use confidence labels and verify-fit language instead
 
 ## Data Model
 
@@ -72,21 +178,31 @@ Core entities:
 - `BikeProfile`
 - `BikeComponent`
 - `Activity`
-- `ComponentHealth`
-- `HealthAlert`
-- `Retailer`
+- `ComponentCompatibilityProfile`
+- `ServiceEvent`
+- `RetailerListing`
+- `OfferSnapshot`
+- `OfferMatch`
 - `RetailerOffer`
-- `OfferSummary`
+- `GearHealthSnapshot`
+- `ComponentDetailSnapshot`
+- `AffiliateClickEvent`
 
-Important shifts in this version:
+Important modeling choices in this version:
 
 - rides are attributed to a specific bike
 - components belong to a specific bike
-- retailer comparison is driven by normalized catalog keys instead of one placeholder shop link
+- service history is recorded separately from the current install state
+- offers now carry:
+  - fit confidence
+  - compatibility status
+  - freshness labels
+  - affiliate URLs
+- `catalogKey` remains as a seeded matching shortcut, not the only future matching path
 
-## Wear Logic
+## Wear Model
 
-Wear is derived from rides on the matching bike only:
+The current wear model is explainable and mileage-based:
 
 ```ts
 rawMilesSinceInstall =
@@ -111,9 +227,9 @@ Alert thresholds:
 - critical at `<= 10%`
 - expired at `<= 0%`
 
-## Retailer Pricing Model
+## Price Aggregation Model
 
-The portfolio implementation ships seeded offer snapshots for US retailers:
+The repo ships mocked US retailer offers for:
 
 - Jenson USA
 - Competitive Cyclist
@@ -123,28 +239,38 @@ The portfolio implementation ships seeded offer snapshots for US retailers:
 
 Each offer includes:
 
-- listed price
+- retailer
+- list price
 - shipping price
 - delivered total
 - stock state
-- timestamp for when pricing was checked
-- outbound affiliate-style URL
+- freshness label
+- fit confidence
+- compatibility status
+- affiliate-style outbound URL
 
-The component detail page ranks offers using:
+The default ranking behavior is user-first:
 
-- lowest listed price
-- lowest delivered total
-- in-stock offers before out-of-stock offers
+- in-stock before out-of-stock
+- compatible before incompatible
+- fresher data before stale data
+- best price and lowest delivered badges highlighted
 
-The included API route is:
+## Public API Surface
 
+Current route handlers:
+
+- `GET /api/projects/cc-component-health/offers?componentId=<id>`
 - `GET /api/projects/cc-component-health/offers?catalogKey=<key>`
+- `POST /api/projects/cc-component-health/components/:id/replaced`
+- `POST /api/projects/cc-component-health/affiliate-clicks`
+- `POST /api/projects/cc-component-health/setup`
 
-That route returns cached offer data now, but it is shaped to support future ingestion jobs and partner adapters.
+These routes validate payloads with `zod` and are intentionally shaped so a future server-backed version can swap out mock adapters for real persistence and partner integrations.
 
-## Analytics
+## Analytics Events
 
-Analytics are mocked with `console.log`. Current events include:
+Current instrumentation in the codebase includes:
 
 - `strava_connect_success`
 - `bike_created`
@@ -159,22 +285,99 @@ Analytics are mocked with `console.log`. Current events include:
 - `component_marked_replaced`
 - `demo_reset`
 
+PRD-relevant events to preserve or expand in a production version:
+
+- `gear_health_opened`
+- `bike_selected`
+- `component_edited`
+- `replace_alert_shown`
+- `replace_alert_clicked`
+- `price_compare_viewed`
+- `retailer_offer_clicked`
+- `affiliate_redirect_success`
+- `price_alert_set`
+
+## Risks And Mitigations
+
+### Compatibility trust risk
+
+- Mitigated in MVP by fit-confidence language and review-fit messaging
+- The UI avoids presenting perfect compatibility as a guarantee
+
+### Retailer data complexity
+
+- Mitigated by mocked offers in this repo plus pluggable provider boundaries
+
+### Pay-to-play perception
+
+- Best-price sorting is the default behavior
+- Affiliate disclosure is shown on pricing surfaces
+- Sponsored placements are out of scope for this repo
+
+### Alert fatigue
+
+- Current implementation keeps alerts explainable and tied to concrete thresholds
+- Notification controls are deferred
+
+## Rollout / Experiment Plan
+
+Recommended rollout based on the product case:
+
+### Phase 0
+
+- affiliate and legal readiness
+- disclosure language
+- attribution policy
+
+### Phase 1
+
+- internal dogfood
+- validate bike mileage attribution, alerts, rendering, and click tracking
+
+### Phase 2
+
+- beta to eligible cyclists
+- suggested cohort:
+  - at least two rides per week or at least 1,000 miles per year
+  - at least two bikes configured
+
+### Phase 3
+
+- ramp in-app surfaces and lifecycle messaging
+
+### Phase 4
+
+- GA
+- expand component support
+- add price alerts and saved retailer preferences
+
+### A/B test framing
+
+- Control: wear estimates and alerts only
+- Treatment: wear estimates plus price comparison and affiliate offers
+- Primary KPI: incremental affiliate revenue per eligible user
+
 ## Local Development
+
+Install dependencies:
 
 ```bash
 pnpm install
+```
+
+Start the app:
+
+```bash
 pnpm dev
 ```
 
-Run tests:
+Quality checks:
 
 ```bash
+pnpm run check:types
+pnpm lint
 pnpm test
-```
-
-Run a production build:
-
-```bash
+pnpm test:e2e
 pnpm build
 ```
 
@@ -183,27 +386,34 @@ pnpm build
 ```text
 app/
   projects/cc-component-health/
-  api/projects/cc-component-health/offers/
+  api/projects/cc-component-health/
 src/
   features/cc-component-health/
+    adapters/
+    analytics/
+    components/
+    context/
+    data/
+    domain/
+    schemas/
+    server/
 ```
 
-Key files:
+## Case Study Framing
 
-- `src/features/cc-component-health/context/DemoStateProvider.tsx`
-- `src/features/cc-component-health/data/demoSeed.ts`
-- `src/features/cc-component-health/data/mockActivities.ts`
-- `src/features/cc-component-health/data/mockOffers.ts`
-- `src/features/cc-component-health/lib/wear.ts`
-- `src/features/cc-component-health/lib/offers.ts`
-- `app/projects/cc-component-health/dashboard/page.tsx`
-- `app/projects/cc-component-health/component/[id]/page.tsx`
+This repo supports the following case study narrative:
+
+- Strava needed a low-cost, high-yield revenue concept
+- existing bike and ride attribution data made maintenance lifecycle tracking feasible
+- cyclists already price compare replacement parts
+- the product uses that replacement moment to deliver utility and monetize with transparent affiliate referrals
 
 ## What I’d Build Next
 
-- Real Strava OAuth and bike sync
-- Scheduled server-side ingestion jobs for retailer pricing
-- Better part matching and SKU normalization across retailers
-- Notification delivery for upcoming replacement windows
-- Service history timeline and bike-specific maintenance logs
-- International retailer coverage and shipping normalization
+- real Strava OAuth and bike sync
+- server-backed persistence with Postgres
+- richer compatibility metadata and bike standards
+- retailer feed adapters and price refresh jobs
+- price alerts and notification preferences
+- experiment flags for wear-only versus price-compare treatment
+- help-center and customer-support content for wear and fit explanations

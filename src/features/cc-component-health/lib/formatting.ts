@@ -35,3 +35,31 @@ export function formatDateTime(value: string | null): string {
     minute: "2-digit"
   }).format(new Date(value));
 }
+
+export function formatOfferFreshness(value: "fresh" | "aging" | "stale"): string {
+  switch (value) {
+    case "fresh":
+      return "Fresh";
+    case "aging":
+      return "Aging";
+    case "stale":
+    default:
+      return "Stale";
+  }
+}
+
+export function formatMatchConfidence(
+  value: "exact" | "high" | "medium" | "low"
+): string {
+  switch (value) {
+    case "exact":
+      return "Exact fit";
+    case "high":
+      return "High fit";
+    case "medium":
+      return "Review fit";
+    case "low":
+    default:
+      return "Low fit";
+  }
+}

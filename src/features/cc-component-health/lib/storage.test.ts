@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { createSeededDemoState } from "@/src/features/cc-component-health/data/demoSeed";
-import { loadDemoState } from "@/src/features/cc-component-health/lib/storage";
+import {
+  loadDemoState,
+  STORAGE_SCHEMA_VERSION
+} from "@/src/features/cc-component-health/lib/storage";
 import type { DemoState } from "@/src/features/cc-component-health/types";
 
 const STORAGE_KEY = "cc-component-health-demo-state";
-const STORAGE_SCHEMA_VERSION = 3;
 
 function installWindow(initialValue?: string) {
   const store = new Map<string, string>();
@@ -88,6 +90,8 @@ describe("loadDemoState", () => {
     expect(state.bikes[0]?.name).toBe("Custom Bike");
     expect(state.selectedBikeId).toBe("custom-bike");
     expect(state.components).toEqual([]);
+    expect(state.serviceEvents).toEqual(savedState.serviceEvents);
+    expect(state.affiliateClicks).toEqual(savedState.affiliateClicks);
   });
 
   it("migrates legacy saved state back to the seeded experience", () => {

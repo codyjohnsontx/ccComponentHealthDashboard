@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 
 import { trackEvent } from "@/src/features/cc-component-health/analytics/trackEvent";
@@ -14,16 +14,36 @@ const emittedDashboardEvents = new Set<string>();
 
 export default function ComponentHealthDashboardPage() {
   const {
-    state,
+    hydrated,
+    dashboardSnapshot,
+    selectBike,
+    state
+  } = useDemoState();
+  const {
     activities,
     bikes,
     selectedBikeId,
-    selectBike,
     totalRideMiles,
     filteredComponentHealth,
     filteredAlerts,
-    isSetupComplete
-  } = useDemoState();
+    isSetupComplete,
+    dueSoonCount,
+    spendAtRisk,
+    priorityItems
+  } = dashboardSnapshot;
+  const hasInitializedBikeFilter = useRef(false);
+
+  useEffect(() => {
+    if (!hydrated || hasInitializedBikeFilter.current) {
+      return;
+    }
+
+    hasInitializedBikeFilter.current = true;
+
+    if (bikes.length > 1 && selectedBikeId !== "all") {
+      selectBike("all");
+    }
+  }, [bikes.length, hydrated, selectBike, selectedBikeId]);
 
   useEffect(() => {
     const key = "dashboard_viewed";
@@ -83,16 +103,6 @@ export default function ComponentHealthDashboardPage() {
       />
     );
   }
-
-  const dueSoonCount = filteredComponentHealth.filter(
-    (item) => item.alertLevel !== "none"
-  ).length;
-  const spendAtRisk = filteredComponentHealth
-    .filter((item) => item.alertLevel !== "none" && item.bestPriceOffer)
-    .reduce((sum, item) => sum + (item.bestPriceOffer?.price ?? 0), 0);
-  const priorityItems = [...filteredComponentHealth]
-    .sort((left, right) => left.remainingPercent - right.remainingPercent)
-    .slice(0, 5);
 
   return (
     <section className={styles.desktopThreeCol}>

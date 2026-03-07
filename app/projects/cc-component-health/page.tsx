@@ -18,20 +18,20 @@ import {
 
 export default function ComponentHealthLandingPage() {
   const {
+    landingSnapshot,
+    connectMockStrava,
+    resetDemoState
+  } = useDemoState();
+  const {
     state,
     bikes,
     activities,
     totalRideMiles,
     componentHealth,
     alerts,
-    connectMockStrava,
-    resetDemoState
-  } = useDemoState();
-
-  const previewComponents = [...componentHealth]
-    .sort((left, right) => left.remainingPercent - right.remainingPercent)
-    .slice(0, 3);
-  const urgentComponent = previewComponents[0];
+    previewComponents,
+    urgentComponent
+  } = landingSnapshot;
 
   return (
     <div className={styles.desktopThreeCol}>

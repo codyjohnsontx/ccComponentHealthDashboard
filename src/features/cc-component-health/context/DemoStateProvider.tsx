@@ -9,73 +9,47 @@ import {
 } from "react";
 
 import { trackEvent } from "@/src/features/cc-component-health/analytics/trackEvent";
-import { canConnectStrava } from "@/src/features/cc-component-health/config/strava";
 import {
-  componentPresetMap,
-  createComponentFromPreset
+  createComponentFromPreset,
+  componentPresetMap
 } from "@/src/features/cc-component-health/data/componentPresets";
 import { createSeededDemoState } from "@/src/features/cc-component-health/data/demoSeed";
-import { mockActivities } from "@/src/features/cc-component-health/data/mockActivities";
-import { buildAlerts } from "@/src/features/cc-component-health/lib/alerts";
 import {
-  buildOfferSummary,
-  getBestPriceOffer,
-  getLowestDeliveredOffer,
-  getOffersForCatalogKey,
-  rankRetailerOffers,
-  resolveComponentCatalogKey
-} from "@/src/features/cc-component-health/lib/offers";
+  buildAlertsSnapshot,
+  buildComponentDetailSnapshot,
+  buildDashboardSnapshot,
+  buildGearHealthSnapshot,
+  buildLandingSnapshot
+} from "@/src/features/cc-component-health/domain/snapshots";
 import {
-  createDefaultDemoState,
   loadDemoState,
   saveDemoState
 } from "@/src/features/cc-component-health/lib/storage";
-import { calculateAllComponentHealth } from "@/src/features/cc-component-health/lib/wear";
+import { canConnectStrava } from "@/src/features/cc-component-health/config/strava";
+import { markComponentReplaced as applyComponentReplaced } from "@/src/features/cc-component-health/server/mutations/markComponentReplaced";
+import { recordAffiliateClick as applyAffiliateClick } from "@/src/features/cc-component-health/server/mutations/recordAffiliateClick";
+import { saveBikeSetup } from "@/src/features/cc-component-health/server/mutations/saveBikeSetup";
 import type {
+  AffiliateSurface,
   BikeComponent,
   BikeFilterId,
   BikeProfile,
-  ComponentHealth,
-  ComponentPreset,
+  ComponentDetailSnapshot,
   ComponentType,
   DemoState,
-  HealthAlert,
+  FeatureBootstrapData,
+  GearHealthSnapshot,
+  LandingSnapshot,
   OfferSummary,
   RetailerOffer,
-  WearSensitivity
+  ServiceEvent
 } from "@/src/features/cc-component-health/types";
 
-type DerivedComponentHealth = ComponentHealth & {
-  component: BikeComponent;
-  componentLabel: string;
-  bike?: BikeProfile;
-  bikeName: string;
-  preset?: ComponentPreset;
-  catalogKey: ReturnType<typeof resolveComponentCatalogKey>;
-  offers: RetailerOffer[];
-  offerSummary: OfferSummary;
-  bestPriceOffer: RetailerOffer | null;
-  lowestDeliveredOffer: RetailerOffer | null;
-};
-
-type RideStats = {
-  count: number;
-  miles: number;
-};
-
-interface DemoStateContextValue {
+interface DemoStateContextValue extends GearHealthSnapshot {
   hydrated: boolean;
-  state: DemoState;
-  activities: typeof mockActivities;
-  bikes: BikeProfile[];
-  selectedBikeId: BikeFilterId;
-  totalRideMiles: number;
-  rideStatsByBike: Record<string, RideStats>;
-  componentHealth: DerivedComponentHealth[];
-  filteredComponentHealth: DerivedComponentHealth[];
-  alerts: HealthAlert[];
-  filteredAlerts: HealthAlert[];
-  isSetupComplete: boolean;
+  landingSnapshot: LandingSnapshot;
+  dashboardSnapshot: ReturnType<typeof buildDashboardSnapshot>;
+  alertsSnapshot: ReturnType<typeof buildAlertsSnapshot>;
   connectMockStrava: () => void;
   selectBike: (bikeId: BikeFilterId) => void;
   saveBike: (bikeProfile: BikeProfile) => void;
@@ -83,13 +57,23 @@ interface DemoStateContextValue {
   addStarterKit: (bikeId?: string) => void;
   updateComponent: (component: BikeComponent) => void;
   markComponentReplaced: (componentId: string) => void;
+  recordAffiliateClick: (input: {
+    componentId: string;
+    retailerId: RetailerOffer["retailerId"];
+    offerId: string;
+    surface: AffiliateSurface;
+    catalogKey?: RetailerOffer["catalogKey"];
+    price?: number;
+    totalPrice?: number;
+  }) => void;
   resetDemoState: () => void;
   getBikes: () => BikeProfile[];
   getComponentById: (componentId: string) => BikeComponent | undefined;
   getComponentsForBike: (bikeId: BikeFilterId) => BikeComponent[];
-  getHealthByComponentId: (componentId: string) => DerivedComponentHealth | undefined;
+  getHealthByComponentId: (componentId: string) => GearHealthSnapshot["componentHealth"][number] | undefined;
   getOffersSummaryForComponent: (componentId: string) => OfferSummary | undefined;
   getOffersForComponent: (componentId: string) => RetailerOffer[];
+  getComponentDetailSnapshot: (componentId: string) => ComponentDetailSnapshot;
 }
 
 const DemoStateContext = createContext<DemoStateContextValue | null>(null);
@@ -98,22 +82,30 @@ function createBikeId() {
   return crypto.randomUUID();
 }
 
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+function buildBootstrap(
+  state: DemoState,
+  seed: FeatureBootstrapData
+): FeatureBootstrapData {
+  return {
+    ...seed,
+    state
+  };
 }
 
 export function DemoStateProvider({
-  children
+  children,
+  initialBootstrap
 }: {
   children: React.ReactNode;
+  initialBootstrap: FeatureBootstrapData;
 }) {
-  const [state, setState] = useState<DemoState>(createDefaultDemoState);
+  const [state, setState] = useState<DemoState>(initialBootstrap.state);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setState(loadDemoState());
+    setState(loadDemoState(initialBootstrap.state));
     setHydrated(true);
-  }, []);
+  }, [initialBootstrap.state]);
 
   useEffect(() => {
     if (!hydrated) {
@@ -123,114 +115,19 @@ export function DemoStateProvider({
     saveDemoState(state);
   }, [hydrated, state]);
 
-  const bikes = state.bikes;
-  const selectedBikeId = state.selectedBikeId;
-
-  const bikeMap = useMemo(
-    () => new Map(bikes.map((bike) => [bike.id, bike])),
-    [bikes]
+  const bootstrap = useMemo(
+    () => buildBootstrap(state, initialBootstrap),
+    [initialBootstrap, state]
   );
-
-  const bikeSensitivityById = useMemo<Partial<Record<string, WearSensitivity>>>(
-    () =>
-      bikes.reduce<Partial<Record<string, WearSensitivity>>>((result, bike) => {
-        result[bike.id] = bike.wearSensitivity;
-        return result;
-      }, {}),
-    [bikes]
+  const snapshot = useMemo(() => buildGearHealthSnapshot(bootstrap), [bootstrap]);
+  const landingSnapshot = useMemo(() => buildLandingSnapshot(bootstrap), [bootstrap]);
+  const dashboardSnapshot = useMemo(
+    () => buildDashboardSnapshot(bootstrap, snapshot.selectedBikeId),
+    [bootstrap, snapshot.selectedBikeId]
   );
-
-  const totalRideMiles = useMemo(
-    () =>
-      mockActivities.reduce((total, activity) => total + activity.distanceMiles, 0),
-    []
-  );
-
-  const rideStatsByBike = useMemo<Record<string, RideStats>>(
-    () =>
-      mockActivities.reduce<Record<string, RideStats>>((result, activity) => {
-        const current = result[activity.bikeId] ?? { count: 0, miles: 0 };
-
-        result[activity.bikeId] = {
-          count: current.count + 1,
-          miles: current.miles + activity.distanceMiles
-        };
-
-        return result;
-      }, {}),
-    []
-  );
-
-  const componentHealth = useMemo<DerivedComponentHealth[]>(
-    () =>
-      calculateAllComponentHealth(
-        state.components,
-        mockActivities,
-        "normal",
-        bikeSensitivityById
-      ).map((health) => {
-        const component = state.components.find(
-          (item) => item.id === health.componentId
-        );
-        const bike = component ? bikeMap.get(component.bikeId) : undefined;
-        const preset = component ? componentPresetMap.get(component.type) : undefined;
-        const catalogKey = component ? resolveComponentCatalogKey(component) : "road-chain";
-        const offers = rankRetailerOffers(getOffersForCatalogKey(catalogKey));
-
-        return {
-          ...health,
-          component: component!,
-          componentLabel: component?.label ?? "Component",
-          bike,
-          bikeName: bike?.name ?? "Bike",
-          preset,
-          catalogKey,
-          offers,
-          offerSummary: buildOfferSummary(offers),
-          bestPriceOffer: getBestPriceOffer(offers),
-          lowestDeliveredOffer: getLowestDeliveredOffer(offers)
-        };
-      }),
-    [bikeMap, bikeSensitivityById, state.components]
-  );
-
-  const filteredComponentHealth = useMemo(
-    () =>
-      selectedBikeId === "all"
-        ? componentHealth
-        : componentHealth.filter((item) => item.bikeId === selectedBikeId),
-    [componentHealth, selectedBikeId]
-  );
-
-  const alerts = useMemo(
-    () =>
-      buildAlerts(
-        componentHealth.map((item) => ({
-          ...item,
-          bikeId: item.bikeId,
-          bikeName: item.bikeName
-        }))
-      ).map((alert) => {
-        const healthItem = componentHealth.find(
-          (item) => item.componentId === alert.componentId
-        );
-
-        return {
-          ...alert,
-          catalogKey: healthItem?.catalogKey,
-          bestPriceStartingAt: healthItem?.bestPriceOffer?.price,
-          retailerCount: healthItem?.offerSummary.retailerCount ?? 0
-        };
-      }),
-    [componentHealth]
-  );
-
-  const filteredAlerts = useMemo(
-    () =>
-      selectedBikeId === "all"
-        ? alerts
-        : alerts.filter((alert) => alert.bikeId === selectedBikeId),
-    [alerts, selectedBikeId]
+  const alertsSnapshot = useMemo(
+    () => buildAlertsSnapshot(bootstrap, snapshot.selectedBikeId),
+    [bootstrap, snapshot.selectedBikeId]
   );
 
   function connectMockStrava() {
@@ -246,7 +143,7 @@ export function DemoStateProvider({
     trackEvent("strava_connect_success", {
       athleteName: state.athleteName,
       mode: state.stravaMode,
-      activityCount: mockActivities.length
+      activityCount: snapshot.activities.length
     });
   }
 
@@ -271,6 +168,16 @@ export function DemoStateProvider({
       const existingBike = currentState.bikes.find(
         (bike) => bike.id === normalizedBike.id
       );
+      const nextState = {
+        ...currentState,
+        bikes: existingBike
+          ? currentState.bikes.map((bike) =>
+              bike.id === normalizedBike.id ? normalizedBike : bike
+            )
+          : [...currentState.bikes, normalizedBike]
+      };
+
+      saveBikeSetup(nextState);
 
       if (!existingBike) {
         trackEvent("bike_created", {
@@ -280,22 +187,31 @@ export function DemoStateProvider({
         });
       }
 
-      return {
-        ...currentState,
-        bikes: existingBike
-          ? currentState.bikes.map((bike) =>
-              bike.id === normalizedBike.id ? normalizedBike : bike
-            )
-          : [...currentState.bikes, normalizedBike]
-      };
+      return nextState;
     });
   }
 
   function addComponent(component: BikeComponent) {
-    setState((currentState) => ({
-      ...currentState,
-      components: [...currentState.components, component]
-    }));
+    setState((currentState) => {
+      const serviceEvent: ServiceEvent = {
+        id: `service-install-${component.id}`,
+        componentId: component.id,
+        bikeId: component.bikeId,
+        type: "installed",
+        date: component.installDate,
+        mileageAtService: component.baselineMiles,
+        notes: component.notes,
+        source: "user"
+      };
+      const nextState = {
+        ...currentState,
+        components: [...currentState.components, component],
+        serviceEvents: [...currentState.serviceEvents, serviceEvent]
+      };
+
+      saveBikeSetup(nextState);
+      return nextState;
+    });
 
     trackEvent("component_added", {
       componentId: component.id,
@@ -308,7 +224,9 @@ export function DemoStateProvider({
   function addStarterKit(bikeId?: string) {
     const targetBikeId =
       bikeId ??
-      (selectedBikeId !== "all" ? selectedBikeId : state.bikes[0]?.id);
+      (snapshot.selectedBikeId !== "all"
+        ? snapshot.selectedBikeId
+        : snapshot.bikes[0]?.id);
 
     if (!targetBikeId) {
       return;
@@ -322,39 +240,52 @@ export function DemoStateProvider({
       "cassette",
       "bar-tape-grips"
     ];
-    const starterKit = starterTypes.flatMap((type) => {
-      const preset = componentPresetMap.get(type);
-      return preset ? [createComponentFromPreset(preset, targetBikeId)] : [];
-    });
 
-    starterKit.forEach((component) => addComponent(component));
+    starterTypes.forEach((type) => {
+      const preset = componentPresetMap.get(type);
+
+      if (preset) {
+        addComponent(createComponentFromPreset(preset, targetBikeId));
+      }
+    });
   }
 
   function updateComponent(component: BikeComponent) {
-    setState((currentState) => ({
-      ...currentState,
-      components: currentState.components.map((currentComponent) =>
-        currentComponent.id === component.id ? component : currentComponent
-      )
-    }));
+    setState((currentState) => {
+      const nextState = {
+        ...currentState,
+        components: currentState.components.map((currentComponent) =>
+          currentComponent.id === component.id ? component : currentComponent
+        )
+      };
+
+      saveBikeSetup(nextState);
+      return nextState;
+    });
   }
 
   function markComponentReplaced(componentId: string) {
-    const healthItem = componentHealth.find((item) => item.componentId === componentId);
+    const healthItem = snapshot.componentHealth.find(
+      (item) => item.componentId === componentId
+    );
 
-    setState((currentState) => ({
-      ...currentState,
-      components: currentState.components.map((component) =>
-        component.id === componentId
-          ? {
-              ...component,
-              installDate: todayIso(),
-              baselineMiles: 0,
-              replacementCount: component.replacementCount + 1
-            }
-          : component
-      )
-    }));
+    setState((currentState) =>
+      applyComponentReplaced(currentState, {
+        componentId,
+        mileageAtService: healthItem?.rawMilesSinceInstall ?? 0
+      }).state
+    );
+
+    void fetch(`/api/projects/cc-component-health/components/${componentId}/replaced`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        componentId,
+        mileageAtService: healthItem?.rawMilesSinceInstall ?? 0
+      })
+    }).catch(() => {});
 
     trackEvent("component_marked_replaced", {
       componentId,
@@ -364,11 +295,33 @@ export function DemoStateProvider({
     });
   }
 
+  function recordAffiliateClick(input: {
+    componentId: string;
+    retailerId: RetailerOffer["retailerId"];
+    offerId: string;
+    surface: AffiliateSurface;
+    catalogKey?: RetailerOffer["catalogKey"];
+    price?: number;
+    totalPrice?: number;
+  }) {
+    setState((currentState) => applyAffiliateClick(currentState, input).state);
+    void fetch("/api/projects/cc-component-health/affiliate-clicks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(input)
+    }).catch(() => {});
+  }
+
   function resetDemoState() {
-    setState({
+    const nextState = {
       ...createSeededDemoState(),
       stravaMode: state.stravaMode
-    });
+    };
+
+    setState(nextState);
+    saveBikeSetup(nextState);
 
     trackEvent("demo_reset", {
       source: "shell"
@@ -376,21 +329,21 @@ export function DemoStateProvider({
   }
 
   function getBikes() {
-    return state.bikes;
+    return snapshot.state.bikes;
   }
 
   function getComponentById(componentId: string) {
-    return state.components.find((component) => component.id === componentId);
+    return snapshot.state.components.find((component) => component.id === componentId);
   }
 
   function getComponentsForBike(bikeId: BikeFilterId) {
     return bikeId === "all"
-      ? state.components
-      : state.components.filter((component) => component.bikeId === bikeId);
+      ? snapshot.state.components
+      : snapshot.state.components.filter((component) => component.bikeId === bikeId);
   }
 
   function getHealthByComponentId(componentId: string) {
-    return componentHealth.find((health) => health.componentId === componentId);
+    return snapshot.componentHealth.find((health) => health.componentId === componentId);
   }
 
   function getOffersSummaryForComponent(componentId: string) {
@@ -401,48 +354,33 @@ export function DemoStateProvider({
     return getHealthByComponentId(componentId)?.offers ?? [];
   }
 
-  const value = useMemo<DemoStateContextValue>(
-    () => ({
-      hydrated,
-      state,
-      activities: mockActivities,
-      bikes,
-      selectedBikeId,
-      totalRideMiles,
-      rideStatsByBike,
-      componentHealth,
-      filteredComponentHealth,
-      alerts,
-      filteredAlerts,
-      isSetupComplete: Boolean(state.bikes.length > 0 && state.components.length > 0),
-      connectMockStrava,
-      selectBike,
-      saveBike,
-      addComponent,
-      addStarterKit,
-      updateComponent,
-      markComponentReplaced,
-      resetDemoState,
-      getBikes,
-      getComponentById,
-      getComponentsForBike,
-      getHealthByComponentId,
-      getOffersSummaryForComponent,
-      getOffersForComponent
-    }),
-    [
-      alerts,
-      bikes,
-      componentHealth,
-      filteredAlerts,
-      filteredComponentHealth,
-      hydrated,
-      rideStatsByBike,
-      selectedBikeId,
-      state,
-      totalRideMiles
-    ]
-  );
+  function getComponentDetailSnapshot(componentId: string) {
+    return buildComponentDetailSnapshot(bootstrap, componentId);
+  }
+
+  const value: DemoStateContextValue = {
+    hydrated,
+    landingSnapshot,
+    dashboardSnapshot,
+    alertsSnapshot,
+    ...snapshot,
+    connectMockStrava,
+    selectBike,
+    saveBike,
+    addComponent,
+    addStarterKit,
+    updateComponent,
+    markComponentReplaced,
+    recordAffiliateClick,
+    resetDemoState,
+    getBikes,
+    getComponentById,
+    getComponentsForBike,
+    getHealthByComponentId,
+    getOffersSummaryForComponent,
+    getOffersForComponent,
+    getComponentDetailSnapshot
+  };
 
   return (
     <DemoStateContext.Provider value={value}>
