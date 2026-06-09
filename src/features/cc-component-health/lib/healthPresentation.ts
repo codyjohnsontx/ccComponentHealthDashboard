@@ -31,11 +31,7 @@ export function getHealthStatusLabel(
 }
 
 export function getMeterFillPercent(remainingPercent: number): number {
-  const normalizedPercent = Math.max(0, Math.min(remainingPercent, 1)) * 100;
+  const normalizedPercent = Math.max(0, Math.min(remainingPercent, 1));
 
-  if (normalizedPercent === 0) {
-    return 6;
-  }
-
-  return normalizedPercent;
+  return (1 - normalizedPercent) * 100;
 }

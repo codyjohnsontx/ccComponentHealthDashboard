@@ -94,6 +94,24 @@ describe("loadDemoState", () => {
     expect(state.affiliateClicks).toEqual(savedState.affiliateClicks);
   });
 
+  it("updates the old seeded account name in saved local state", () => {
+    const savedState: DemoState = {
+      ...createSeededDemoState(),
+      athleteName: "Avery Rider"
+    };
+
+    installWindow(
+      JSON.stringify({
+        ...savedState,
+        _schemaVersion: STORAGE_SCHEMA_VERSION
+      })
+    );
+
+    const state = loadDemoState();
+
+    expect(state.athleteName).toBe("Hunter Lewis");
+  });
+
   it("migrates legacy saved state back to the seeded experience", () => {
     installWindow(
       JSON.stringify({
@@ -105,7 +123,7 @@ describe("loadDemoState", () => {
 
     const state = loadDemoState();
 
-    expect(state.athleteName).toBe("Avery Rider");
+    expect(state.athleteName).toBe("Hunter Lewis");
     expect(state.components.length).toBeGreaterThan(0);
   });
 });

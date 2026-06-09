@@ -6,6 +6,7 @@ import type { DemoState } from "@/src/features/cc-component-health/types";
 
 export const STORAGE_KEY = "cc-component-health-demo-state";
 export const STORAGE_SCHEMA_VERSION = 4;
+const LEGACY_SEEDED_ATHLETE_NAME = "Avery Rider";
 
 type PersistedDemoState = DemoState & {
   _schemaVersion?: number;
@@ -31,9 +32,15 @@ export function loadBrowserDemoState(defaultState: DemoState): DemoState {
       return defaultState;
     }
 
+    const athleteName =
+      parsedValue.athleteName === LEGACY_SEEDED_ATHLETE_NAME
+        ? defaultState.athleteName
+        : parsedValue.athleteName;
+
     return demoStateSchema.parse({
       ...defaultState,
       ...parsedValue,
+      athleteName,
       stravaMode: defaultState.stravaMode,
       bikes: parsedValue.bikes ?? defaultState.bikes,
       selectedBikeId: parsedValue.selectedBikeId ?? defaultState.selectedBikeId,

@@ -204,7 +204,7 @@ export function createSeededDemoState(): DemoState {
   return {
     stravaConnected: true,
     stravaMode: "mock",
-    athleteName: "Avery Rider",
+    athleteName: "Hunter Lewis",
     bikes: seededBikes.map((bike) => ({ ...bike })),
     selectedBikeId: SEEDED_BIKE_IDS.road,
     components: seededComponents.map((component) => ({ ...component })),
