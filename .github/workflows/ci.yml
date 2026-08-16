@@ -7,9 +7,11 @@ on:
   pull_request:
     branches:
       - main
+      - codex/ride-component-health-mvp
   push:
     branches:
       - main
+      - codex/ride-component-health-mvp
 
 jobs:
   guard-files:

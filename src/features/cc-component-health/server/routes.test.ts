@@ -57,10 +57,11 @@ describe("feature routes", () => {
     expect(body.offers.length).toBeGreaterThan(0);
   });
 
-  it("returns 404 rather than an orphaned event for an unknown component", async () => {
+  it("validates a component the seeded bootstrap has never heard of", async () => {
+    const clientCreatedId = "3f1b2c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
     const response = await postReplacement(
       new Request(
-        "http://localhost/api/projects/cc-component-health/components/component-does-not-exist/replaced",
+        `http://localhost/api/projects/cc-component-health/components/${clientCreatedId}/replaced`,
         {
           method: "POST",
           body: JSON.stringify({ mileageAtService: 100 }),
@@ -71,12 +72,40 @@ describe("feature routes", () => {
       ),
       {
         params: Promise.resolve({
-          id: "component-does-not-exist"
+          id: clientCreatedId
+        })
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.persisted).toBe(false);
+    expect(body.serviceEvent.componentId).toBe(clientCreatedId);
+    expect(body.serviceEvent.mileageAtService).toBe(100);
+    expect(body.serviceEvent.bikeId).toBeUndefined();
+  });
+
+  it("rejects a replacement payload that fails validation", async () => {
+    const response = await postReplacement(
+      new Request(
+        "http://localhost/api/projects/cc-component-health/components/component-road-chain/replaced",
+        {
+          method: "POST",
+          body: JSON.stringify({ mileageAtService: -1 }),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      ),
+      {
+        params: Promise.resolve({
+          id: "component-road-chain"
         })
       }
     );
 
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(400);
   });
 
   it("records component replacement payloads", async () => {

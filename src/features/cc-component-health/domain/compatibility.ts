@@ -7,7 +7,6 @@ import type {
   ComponentCompatibilityProfile,
   MatchConfidence,
   OfferCatalogKey,
-  OfferFreshness,
   OfferMatch,
   RetailerListing
 } from "@/src/features/cc-component-health/types";
@@ -171,21 +170,6 @@ export function resolveComponentCompatibilityProfile(
       catalogCompatibility.fitNotes ??
       preset?.defaultCompatibility.fitNotes
   };
-}
-
-export function getOfferFreshness(lastCheckedAt: string): OfferFreshness {
-  const checkedAt = new Date(lastCheckedAt).getTime();
-  const ageHours = Math.max(0, (Date.now() - checkedAt) / (1000 * 60 * 60));
-
-  if (ageHours <= 72) {
-    return "fresh";
-  }
-
-  if (ageHours <= 168) {
-    return "aging";
-  }
-
-  return "stale";
 }
 
 function compareWidth(
