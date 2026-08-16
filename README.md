@@ -379,6 +379,7 @@ Quality checks:
 pnpm run check:types
 pnpm lint
 pnpm test
+pnpm exec playwright install --with-deps chromium  # once per machine
 pnpm test:e2e
 pnpm build
 ```
