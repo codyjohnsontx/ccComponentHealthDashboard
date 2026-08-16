@@ -6,7 +6,7 @@ export function recordAffiliateClick(
   input: Omit<AffiliateClickEvent, "id" | "clickedAt">
 ) {
   const event: AffiliateClickEvent = {
-    id: `affiliate-${input.offerId}-${Date.now()}`,
+    id: `affiliate-${input.offerId}-${crypto.randomUUID()}`,
     clickedAt: new Date().toISOString(),
     ...input
   };
