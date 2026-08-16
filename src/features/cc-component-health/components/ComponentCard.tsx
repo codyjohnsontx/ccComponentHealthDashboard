@@ -27,7 +27,9 @@ export function ComponentCard({
     component.position
       ? `${component.position[0].toUpperCase()}${component.position.slice(1)}`
       : null,
-    preset ? `${preset.toolsNeeded.length} tools` : null
+    preset
+      ? `${preset.toolsNeeded.length} ${preset.toolsNeeded.length === 1 ? "tool" : "tools"}`
+      : null
   ].filter(Boolean) as string[];
 
   return (
