@@ -179,11 +179,15 @@ Core entities:
 - `BikeComponent`
 - `Activity`
 - `ComponentCompatibilityProfile`
+- `ComponentHealth`
+- `HealthAlert`
 - `ServiceEvent`
+- `Retailer`
 - `RetailerListing`
 - `OfferSnapshot`
 - `OfferMatch`
 - `RetailerOffer`
+- `OfferSummary`
 - `GearHealthSnapshot`
 - `ComponentDetailSnapshot`
 - `AffiliateClickEvent`
@@ -395,9 +399,11 @@ src/
     adapters/
     analytics/
     components/
+    config/
     context/
     data/
     domain/
+    lib/
     schemas/
     server/
 ```
