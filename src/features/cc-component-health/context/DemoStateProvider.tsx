@@ -265,14 +265,23 @@ export function DemoStateProvider({
   }
 
   function markComponentReplaced(componentId: string) {
+    if (!state.components.some((component) => component.id === componentId)) {
+      console.error(
+        "[cc-component-health] cannot mark replacement, component is not in demo state",
+        { componentId }
+      );
+      return;
+    }
+
     const healthItem = snapshot.componentHealth.find(
       (item) => item.componentId === componentId
     );
+    const mileageAtService = healthItem?.rawMilesSinceInstall ?? 0;
 
     setState((currentState) =>
       applyComponentReplaced(currentState, {
         componentId,
-        mileageAtService: healthItem?.rawMilesSinceInstall ?? 0
+        mileageAtService
       }).state
     );
 
@@ -283,9 +292,24 @@ export function DemoStateProvider({
       },
       body: JSON.stringify({
         componentId,
-        mileageAtService: healthItem?.rawMilesSinceInstall ?? 0
+        mileageAtService
       })
-    }).catch(() => {});
+    })
+      .then((response) => {
+        if (!response.ok) {
+          console.error(
+            "[cc-component-health] component replacement POST rejected",
+            { componentId, mileageAtService, status: response.status }
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("[cc-component-health] component replacement POST failed", {
+          componentId,
+          mileageAtService,
+          error
+        });
+      });
 
     trackEvent("component_marked_replaced", {
       componentId,
@@ -311,7 +335,25 @@ export function DemoStateProvider({
         "Content-Type": "application/json"
       },
       body: JSON.stringify(input)
-    }).catch(() => {});
+    })
+      .then((response) => {
+        if (!response.ok) {
+          console.error("[cc-component-health] affiliate click POST rejected", {
+            componentId: input.componentId,
+            offerId: input.offerId,
+            surface: input.surface,
+            status: response.status
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("[cc-component-health] affiliate click POST failed", {
+          componentId: input.componentId,
+          offerId: input.offerId,
+          surface: input.surface,
+          error
+        });
+      });
   }
 
   function resetDemoState() {
