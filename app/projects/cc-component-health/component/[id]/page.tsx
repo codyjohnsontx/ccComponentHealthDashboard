@@ -15,6 +15,7 @@ import {
   formatDateTime,
   formatMiles,
   formatMatchConfidence,
+  formatOfferBadge,
   formatOfferFreshness,
   formatPercent
 } from "@/src/features/cc-component-health/lib/formatting";
@@ -204,7 +205,7 @@ export default function ComponentHealthDetailPage() {
               <h2 className={styles.sectionTitle}>Retailer comparison</h2>
             </div>
             <span className={styles.statusBadge}>
-              {health.offerSummary.availableOfferCount}/{health.offerSummary.retailerCount} in stock
+              {health.offerSummary.availableOfferCount}/{health.offers.length} in stock
             </span>
           </div>
 
@@ -250,12 +251,7 @@ export default function ComponentHealthDetailPage() {
           <div className={styles.offerTable}>
             {health.offers.map((offer) => {
               const retailer = retailerMap.get(offer.retailerId);
-              const badgeLabel =
-                offer.badge === "best_price"
-                  ? "Best price"
-                  : offer.badge === "lowest_delivered"
-                    ? "Lowest delivered"
-                    : null;
+              const badgeLabels = offer.badges.map(formatOfferBadge);
 
               return (
                 <article key={offer.id} className={styles.offerRow}>
@@ -264,11 +260,16 @@ export default function ComponentHealthDetailPage() {
                       <p className="eyebrow">{retailer?.partnerLabel ?? "Retailer"}</p>
                       <h3 className={styles.sectionTitle}>{retailer?.name ?? offer.retailerId}</h3>
                       <p className={styles.sectionText}>{offer.productName}</p>
-                      {badgeLabel ? (
+                      {badgeLabels.length > 0 ? (
                         <div className={styles.componentMeta}>
-                          <span className={`${styles.pill} ${styles.pillSuccess}`}>
-                            {badgeLabel}
-                          </span>
+                          {badgeLabels.map((badgeLabel) => (
+                            <span
+                              key={badgeLabel}
+                              className={`${styles.pill} ${styles.pillSuccess}`}
+                            >
+                              {badgeLabel}
+                            </span>
+                          ))}
                         </div>
                       ) : null}
                     </div>

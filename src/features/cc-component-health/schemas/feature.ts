@@ -128,13 +128,9 @@ export const retailerOfferSchema = z.object({
   compatibilityStatus: z.enum(["confirmed", "likely", "review", "incompatible"]),
   matchConfidence: z.enum(["exact", "high", "medium", "low"]),
   fitNotes: z.array(z.string()),
-  badge: z.enum([
-    "best_price",
-    "lowest_delivered",
-    "fastest_ship",
-    "popular_retailer",
-    "none"
-  ])
+  badges: z.array(
+    z.enum(["best_price", "lowest_delivered", "fastest_ship", "popular_retailer"])
+  )
 });
 
 export const markComponentReplacedRequestSchema = z.object({

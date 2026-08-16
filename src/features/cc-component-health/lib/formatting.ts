@@ -1,3 +1,5 @@
+import type { OfferBadge } from "@/src/features/cc-component-health/types";
+
 export function formatMiles(value: number): string {
   return `${Math.round(value).toLocaleString()} mi`;
 }
@@ -45,6 +47,20 @@ export function formatOfferFreshness(value: "fresh" | "aging" | "stale"): string
     case "stale":
     default:
       return "Stale";
+  }
+}
+
+export function formatOfferBadge(value: OfferBadge): string {
+  switch (value) {
+    case "best_price":
+      return "Best price";
+    case "lowest_delivered":
+      return "Lowest delivered";
+    case "fastest_ship":
+      return "Fastest shipping";
+    case "popular_retailer":
+    default:
+      return "Popular retailer";
   }
 }
 

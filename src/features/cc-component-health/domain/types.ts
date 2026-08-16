@@ -36,8 +36,7 @@ export type OfferBadge =
   | "best_price"
   | "lowest_delivered"
   | "fastest_ship"
-  | "popular_retailer"
-  | "none";
+  | "popular_retailer";
 export type BrakeSystem = "disc" | "rim";
 export type WheelSize = "700c" | "650b";
 export type CassetteRangeFamily =
@@ -204,7 +203,7 @@ export interface RetailerOffer
     OfferSnapshot,
     OfferMatch {
   id: string;
-  badge: OfferBadge;
+  badges: OfferBadge[];
 }
 
 export interface OfferSummary {

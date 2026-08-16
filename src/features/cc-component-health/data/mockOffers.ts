@@ -149,7 +149,7 @@ function createOffer(
     compatibilityStatus: "review",
     matchConfidence: "medium",
     fitNotes: [],
-    badge: "none"
+    badges: []
   };
 }
 

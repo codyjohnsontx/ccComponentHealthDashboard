@@ -40,6 +40,30 @@ describe("offer ranking", () => {
     expect(summary.compatibleOfferCount).toBeGreaterThan(0);
   });
 
+  it("badges one offer as both best price and lowest delivered when it wins both", () => {
+    const offers = rankRetailerOffers(getOffersForCatalogKey("bar-tape"));
+    const winner = offers.find((offer) => offer.retailerId === "rei");
+
+    expect(winner?.badges).toEqual(
+      expect.arrayContaining(["best_price", "lowest_delivered"])
+    );
+    expect(
+      offers.filter((offer) => offer.badges.includes("best_price"))
+    ).toHaveLength(1);
+  });
+
+  it("counts unique retailers rather than offers", () => {
+    const [first, second] = getOffersForCatalogKey("road-chain");
+    const duplicateRetailerOffers = [
+      first,
+      { ...second, id: `${second.id}-second-listing`, retailerId: first.retailerId }
+    ];
+
+    const summary = buildOfferSummary(duplicateRetailerOffers);
+
+    expect(summary.retailerCount).toBe(1);
+  });
+
   it("attaches compatibility and freshness metadata to component matches", () => {
     const state = createSeededDemoState();
     const component = state.components.find((item) => item.id === "component-gravel-chain");

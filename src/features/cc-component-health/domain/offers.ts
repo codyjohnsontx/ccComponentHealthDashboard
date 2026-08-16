@@ -9,6 +9,7 @@ import type {
   BikeProfile,
   ComponentCompatibilityProfile,
   ComponentPreset,
+  OfferBadge,
   OfferCatalogKey,
   OfferSummary,
   RetailerId,
@@ -189,17 +190,19 @@ export function rankRetailerOffers(offers: RetailerOffer[]): RetailerOffer[] {
 
   return [...offers]
     .map((offer) => {
-      let badge: RetailerOffer["badge"] = "none";
+      const badges: OfferBadge[] = [];
 
       if (bestPriceOffer && offer.id === bestPriceOffer.id) {
-        badge = "best_price";
-      } else if (lowestDeliveredOffer && offer.id === lowestDeliveredOffer.id) {
-        badge = "lowest_delivered";
+        badges.push("best_price");
+      }
+
+      if (lowestDeliveredOffer && offer.id === lowestDeliveredOffer.id) {
+        badges.push("lowest_delivered");
       }
 
       return {
         ...offer,
-        badge
+        badges
       };
     })
     .sort((left, right) => {
@@ -234,9 +237,10 @@ export function rankRetailerOffers(offers: RetailerOffer[]): RetailerOffer[] {
 
 export function buildOfferSummary(offers: RetailerOffer[]): OfferSummary {
   const rankedOffers = rankRetailerOffers(offers);
-  const bestPriceOffer = rankedOffers.find((offer) => offer.badge === "best_price") ?? null;
+  const bestPriceOffer =
+    rankedOffers.find((offer) => offer.badges.includes("best_price")) ?? null;
   const lowestDeliveredOffer =
-    rankedOffers.find((offer) => offer.badge === "lowest_delivered") ??
+    rankedOffers.find((offer) => offer.badges.includes("lowest_delivered")) ??
     bestPriceOffer;
   const lastCheckedAt =
     rankedOffers
@@ -255,7 +259,7 @@ export function buildOfferSummary(offers: RetailerOffer[]): OfferSummary {
     freshOfferCount: rankedOffers.filter((offer) => offer.freshness === "fresh").length,
     agingOfferCount: rankedOffers.filter((offer) => offer.freshness === "aging").length,
     staleOfferCount: rankedOffers.filter((offer) => offer.freshness === "stale").length,
-    retailerCount: rankedOffers.length,
+    retailerCount: new Set(rankedOffers.map((offer) => offer.retailerId)).size,
     lastCheckedAt
   };
 }
