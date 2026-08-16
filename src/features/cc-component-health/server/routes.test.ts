@@ -32,6 +32,51 @@ describe("feature routes", () => {
 
     expect(response.status).toBe(200);
     expect(body.ok).toBe(true);
+    expect(body.persisted).toBe(false);
+  });
+
+  it("returns 404 when componentId matches nothing and no catalogKey is given", async () => {
+    const response = await getOffers(
+      new Request(
+        "http://localhost/api/projects/cc-component-health/offers?componentId=component-does-not-exist"
+      )
+    );
+
+    expect(response.status).toBe(404);
+  });
+
+  it("falls back to the catalog key when the component is unknown", async () => {
+    const response = await getOffers(
+      new Request(
+        "http://localhost/api/projects/cc-component-health/offers?componentId=component-does-not-exist&catalogKey=road-chain"
+      )
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.offers.length).toBeGreaterThan(0);
+  });
+
+  it("returns 404 rather than an orphaned event for an unknown component", async () => {
+    const response = await postReplacement(
+      new Request(
+        "http://localhost/api/projects/cc-component-health/components/component-does-not-exist/replaced",
+        {
+          method: "POST",
+          body: JSON.stringify({ mileageAtService: 100 }),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      ),
+      {
+        params: Promise.resolve({
+          id: "component-does-not-exist"
+        })
+      }
+    );
+
+    expect(response.status).toBe(404);
   });
 
   it("records component replacement payloads", async () => {
@@ -58,6 +103,7 @@ describe("feature routes", () => {
 
     expect(response.status).toBe(200);
     expect(body.ok).toBe(true);
+    expect(body.persisted).toBe(false);
     expect(body.serviceEvent.componentId).toBe("component-road-chain");
   });
 });

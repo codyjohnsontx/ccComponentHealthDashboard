@@ -21,6 +21,6 @@ export * from "@/src/features/cc-component-health/lib/wear";
 export * from "@/src/features/cc-component-health/schemas/feature";
 export * from "@/src/features/cc-component-health/server/mutations/markComponentReplaced";
 export * from "@/src/features/cc-component-health/server/mutations/recordAffiliateClick";
-export * from "@/src/features/cc-component-health/server/mutations/saveBikeSetup";
+export * from "@/src/features/cc-component-health/server/mutations/validateBikeSetup";
 export * from "@/src/features/cc-component-health/server/queries/getGearHealthSnapshots";
 export * from "@/src/features/cc-component-health/types";

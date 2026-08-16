@@ -28,7 +28,7 @@ import {
 import { canConnectStrava } from "@/src/features/cc-component-health/config/strava";
 import { markComponentReplaced as applyComponentReplaced } from "@/src/features/cc-component-health/server/mutations/markComponentReplaced";
 import { recordAffiliateClick as applyAffiliateClick } from "@/src/features/cc-component-health/server/mutations/recordAffiliateClick";
-import { saveBikeSetup } from "@/src/features/cc-component-health/server/mutations/saveBikeSetup";
+import { validateBikeSetup } from "@/src/features/cc-component-health/server/mutations/validateBikeSetup";
 import type {
   AffiliateSurface,
   BikeComponent,
@@ -177,7 +177,7 @@ export function DemoStateProvider({
           : [...currentState.bikes, normalizedBike]
       };
 
-      saveBikeSetup(nextState);
+      validateBikeSetup(nextState);
 
       if (!existingBike) {
         trackEvent("bike_created", {
@@ -209,7 +209,7 @@ export function DemoStateProvider({
         serviceEvents: [...currentState.serviceEvents, serviceEvent]
       };
 
-      saveBikeSetup(nextState);
+      validateBikeSetup(nextState);
       return nextState;
     });
 
@@ -259,7 +259,7 @@ export function DemoStateProvider({
         )
       };
 
-      saveBikeSetup(nextState);
+      validateBikeSetup(nextState);
       return nextState;
     });
   }
@@ -321,7 +321,7 @@ export function DemoStateProvider({
     };
 
     setState(nextState);
-    saveBikeSetup(nextState);
+    validateBikeSetup(nextState);
 
     trackEvent("demo_reset", {
       source: "shell"

@@ -268,6 +268,8 @@ Current route handlers:
 
 These routes validate payloads with `zod` and are intentionally shaped so a future server-backed version can swap out mock adapters for real persistence and partner integrations.
 
+**The POST routes are stateless.** There is no server-side store in this project. Each POST validates its payload, computes the state or event it would produce, echoes that back, and discards it. Every mutation response carries `persisted: false` to make that explicit. The browser owns the demo state: `DemoStateProvider` applies the same reducers client-side and writes to `localStorage` via `saveDemoState`. Server-side storage is on the roadmap below, not in the current build.
+
 ## Analytics Events
 
 Current instrumentation in the codebase includes:

@@ -30,6 +30,19 @@ export async function GET(request: Request) {
         (item) => item.id === parsedQuery.data.componentId
       )
     : undefined;
+
+  // The query schema guarantees componentId or catalogKey, but a componentId
+  // that matches nothing leaves the catalog fallback with no key to look up.
+  if (!component && !parsedQuery.data.catalogKey) {
+    return NextResponse.json(
+      {
+        error: { message: `Component not found: ${parsedQuery.data.componentId}` }
+      },
+      { status: 404 }
+    );
+  }
+
+  const catalogKey = parsedQuery.data.catalogKey;
   const bike = component
     ? bootstrap.state.bikes.find((item) => item.id === component.bikeId)
     : undefined;
@@ -43,7 +56,7 @@ export async function GET(request: Request) {
         )
       )
     : rankRetailerOffers(
-        getOffersForCatalogKey(parsedQuery.data.catalogKey!, bootstrap.offers)
+        catalogKey ? getOffersForCatalogKey(catalogKey, bootstrap.offers) : []
       );
   const summary = buildOfferSummary(offers);
 

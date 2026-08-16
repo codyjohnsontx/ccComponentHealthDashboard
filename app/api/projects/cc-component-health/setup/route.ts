@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { setupMutationSchema } from "@/src/features/cc-component-health/schemas/feature";
-import { saveBikeSetup } from "@/src/features/cc-component-health/server/mutations/saveBikeSetup";
+import { validateBikeSetup } from "@/src/features/cc-component-health/server/mutations/validateBikeSetup";
 
+/**
+ * Stateless validation endpoint. This project has no server-side store, so the
+ * posted setup is validated and echoed back; it is never saved. The browser owns
+ * the demo state through DemoStateProvider, which persists it to localStorage.
+ * Responses carry `persisted: false` so callers cannot mistake this for a write.
+ */
 export async function POST(request: Request) {
   const json = await request.json().catch(() => null);
   const parsedBody = setupMutationSchema.safeParse(json);
@@ -16,11 +22,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = saveBikeSetup(parsedBody.data.state);
+  const result = validateBikeSetup(parsedBody.data.state);
 
   return NextResponse.json({
     ok: true,
-    savedAt: result.savedAt,
+    persisted: false,
+    validatedAt: result.validatedAt,
     bikes: result.state.bikes.length,
     components: result.state.components.length
   });
