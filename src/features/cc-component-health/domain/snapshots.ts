@@ -78,28 +78,30 @@ export function buildGearHealthSnapshot(
     activities,
     "normal",
     bikeSensitivityById
-  ).map((health) => {
+  ).flatMap((health) => {
     const component = state.components.find((item) => item.id === health.componentId);
-    const bike = component ? bikeMap.get(component.bikeId) : undefined;
-    const preset = component ? componentPresetMap.get(component.type) : undefined;
-    const catalogKey = component ? resolveComponentCatalogKey(component) : "road-chain";
-    const compatibilityProfile = component
-      ? resolveComponentCompatibilityProfile(component, bike)
-      : {
-          componentType: "chain" as const,
-          discipline: "road" as const
-        };
-    const resolvedOffers = component
-      ? rankRetailerOffers(matchOffersForComponent(component, compatibilityProfile, offers, bike))
-      : [];
+
+    if (!component) {
+      // Health is computed from state.components, so this should not happen. Skip
+      // the entry rather than surfacing a half-resolved row if the two ever drift.
+      return [];
+    }
+
+    const bike = bikeMap.get(component.bikeId);
+    const preset = componentPresetMap.get(component.type);
+    const catalogKey = resolveComponentCatalogKey(component);
+    const compatibilityProfile = resolveComponentCompatibilityProfile(component, bike);
+    const resolvedOffers = rankRetailerOffers(
+      matchOffersForComponent(component, compatibilityProfile, offers, bike)
+    );
     const serviceHistory = state.serviceEvents
       .filter((event) => event.componentId === health.componentId)
       .sort((left, right) => right.date.localeCompare(left.date));
 
     const resolvedHealth: ResolvedComponentHealth = {
       ...health,
-      component: component!,
-      componentLabel: component?.label ?? "Component",
+      component,
+      componentLabel: component.label,
       bike,
       bikeName: bike?.name ?? "Bike",
       preset,
@@ -113,10 +115,12 @@ export function buildGearHealthSnapshot(
       replacementReason: ""
     };
 
-    return {
-      ...resolvedHealth,
-      replacementReason: buildReplacementReason(resolvedHealth)
-    };
+    return [
+      {
+        ...resolvedHealth,
+        replacementReason: buildReplacementReason(resolvedHealth)
+      }
+    ];
   });
 
   const filteredComponentHealth =
