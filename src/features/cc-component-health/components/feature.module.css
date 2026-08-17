@@ -534,6 +534,18 @@
   margin-bottom: 0.75rem;
 }
 
+.componentCardHeader {
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.componentMetaText {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 .pill {
   min-height: 24px;
   font-size: 0.72rem;
@@ -769,7 +781,12 @@
 
 .offerTableHeader {
   display: grid;
-  grid-template-columns: minmax(220px, 1.45fr) repeat(3, minmax(110px, 0.8fr)) minmax(130px, 0.9fr) 104px;
+  grid-template-columns:
+    minmax(220px, 1.45fr)
+    repeat(3, minmax(110px, 0.8fr))
+    minmax(130px, 0.9fr)
+    minmax(140px, 1fr)
+    104px;
   gap: 0.75rem;
   padding: 0 0.25rem 0.35rem;
   border-bottom: 1px solid var(--border);
@@ -795,7 +812,12 @@
 
 .offerTableRow {
   display: grid;
-  grid-template-columns: minmax(220px, 1.45fr) repeat(3, minmax(110px, 0.8fr)) minmax(130px, 0.9fr) 104px;
+  grid-template-columns:
+    minmax(220px, 1.45fr)
+    repeat(3, minmax(110px, 0.8fr))
+    minmax(130px, 0.9fr)
+    minmax(140px, 1fr)
+    104px;
   gap: 0.75rem;
   align-items: center;
 }

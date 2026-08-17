@@ -1,3 +1,5 @@
+import type { OfferBadge } from "@/src/features/cc-component-health/types";
+
 export function formatMiles(value: number): string {
   return `${Math.round(value).toLocaleString()} mi`;
 }
@@ -34,4 +36,46 @@ export function formatDateTime(value: string | null): string {
     hour: "numeric",
     minute: "2-digit"
   }).format(new Date(value));
+}
+
+export function formatOfferFreshness(value: "fresh" | "aging" | "stale"): string {
+  switch (value) {
+    case "fresh":
+      return "Fresh";
+    case "aging":
+      return "Aging";
+    case "stale":
+    default:
+      return "Stale";
+  }
+}
+
+export function formatOfferBadge(value: OfferBadge): string {
+  switch (value) {
+    case "best_price":
+      return "Best price";
+    case "lowest_delivered":
+      return "Lowest delivered";
+    case "fastest_ship":
+      return "Fastest shipping";
+    case "popular_retailer":
+    default:
+      return "Popular retailer";
+  }
+}
+
+export function formatMatchConfidence(
+  value: "exact" | "high" | "medium" | "low"
+): string {
+  switch (value) {
+    case "exact":
+      return "Exact fit";
+    case "high":
+      return "High fit";
+    case "medium":
+      return "Review fit";
+    case "low":
+    default:
+      return "Low fit";
+  }
 }

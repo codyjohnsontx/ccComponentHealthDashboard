@@ -14,7 +14,10 @@ export const componentPresets: ComponentPreset[] = [
     catalogKey: "road-chain",
     replacementSearchLabel: "12-speed road chain",
     replacementCategoryLabel: "Chains",
-    toolsNeeded: ["Chain checker", "Quick-link pliers", "Chain tool"]
+    toolsNeeded: ["Chain checker", "Quick-link pliers", "Chain tool"],
+    defaultCompatibility: {
+      drivetrainSpeed: 12
+    }
   },
   {
     type: "front-tire",
@@ -23,7 +26,12 @@ export const componentPresets: ComponentPreset[] = [
     catalogKey: "road-front-tire",
     replacementSearchLabel: "700x28 front tire",
     replacementCategoryLabel: "Front tires",
-    toolsNeeded: ["Tire levers", "Floor pump", "Tube or sealant"]
+    toolsNeeded: ["Tire levers", "Floor pump", "Tube or sealant"],
+    defaultCompatibility: {
+      wheelSize: "700c",
+      tireWidthMm: 28,
+      position: "front"
+    }
   },
   {
     type: "rear-tire",
@@ -32,7 +40,12 @@ export const componentPresets: ComponentPreset[] = [
     catalogKey: "road-rear-tire",
     replacementSearchLabel: "700x28 rear tire",
     replacementCategoryLabel: "Rear tires",
-    toolsNeeded: ["Tire levers", "Floor pump", "Tube or sealant"]
+    toolsNeeded: ["Tire levers", "Floor pump", "Tube or sealant"],
+    defaultCompatibility: {
+      wheelSize: "700c",
+      tireWidthMm: 28,
+      position: "rear"
+    }
   },
   {
     type: "brake-pads",
@@ -41,7 +54,10 @@ export const componentPresets: ComponentPreset[] = [
     catalogKey: "road-brake-pads",
     replacementSearchLabel: "Shimano-compatible road disc brake pads",
     replacementCategoryLabel: "Brake pads",
-    toolsNeeded: ["Hex keys", "Pad spreader", "Rotor cleaner"]
+    toolsNeeded: ["Hex keys", "Pad spreader", "Rotor cleaner"],
+    defaultCompatibility: {
+      brakeSystem: "disc"
+    }
   },
   {
     type: "cassette",
@@ -50,7 +66,11 @@ export const componentPresets: ComponentPreset[] = [
     catalogKey: "road-cassette",
     replacementSearchLabel: "12-speed road cassette",
     replacementCategoryLabel: "Cassettes",
-    toolsNeeded: ["Lockring tool", "Chain whip", "Torque wrench"]
+    toolsNeeded: ["Lockring tool", "Chain whip", "Torque wrench"],
+    defaultCompatibility: {
+      drivetrainSpeed: 12,
+      cassetteRangeFamily: "road-close"
+    }
   },
   {
     type: "bar-tape-grips",
@@ -59,7 +79,8 @@ export const componentPresets: ComponentPreset[] = [
     catalogKey: "bar-tape",
     replacementSearchLabel: "Performance road bar tape",
     replacementCategoryLabel: "Bar tape",
-    toolsNeeded: ["Scissors", "Finishing tape", "Hex key"]
+    toolsNeeded: ["Scissors", "Finishing tape", "Hex key"],
+    defaultCompatibility: {}
   }
 ];
 
@@ -91,6 +112,7 @@ export function createComponentFromPreset(
     position,
     catalogKey: preset.catalogKey,
     replacementSearchLabel: preset.replacementSearchLabel,
+    compatibilityProfile: preset.defaultCompatibility,
     notes: "",
     replacementCount: 0,
     ...overrides

@@ -30,7 +30,9 @@ describe("health presentation helpers", () => {
     expect(getHealthStatusLabel("expired")).toBe("Replace now");
   });
 
-  it("keeps a visible expired fill treatment", () => {
-    expect(getMeterFillPercent(0)).toBe(6);
+  it("fills the meter based on used service life", () => {
+    expect(getMeterFillPercent(1)).toBe(0);
+    expect(getMeterFillPercent(0.22)).toBe(78);
+    expect(getMeterFillPercent(0)).toBe(100);
   });
 });

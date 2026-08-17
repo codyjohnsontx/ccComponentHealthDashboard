@@ -45,6 +45,10 @@ export function AlertList({ alerts, onAlertClick }: AlertListProps) {
             Threshold hit at {formatPercent(alert.thresholdTriggered)} remaining life.
           </p>
 
+          {alert.replacementReason ? (
+            <p className={styles.sectionText}>{alert.replacementReason}</p>
+          ) : null}
+
           <div className={styles.statRow}>
             <div className={styles.stat}>
               <div className={styles.metricLabel}>Remaining miles</div>

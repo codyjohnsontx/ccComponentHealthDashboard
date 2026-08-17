@@ -3,6 +3,8 @@
 .next_stale_runtime_fix
 .next_stale_runtime_fix_2
 coverage
+test-results
+playwright-report
 node_modules
 .pnpm-store
 dist

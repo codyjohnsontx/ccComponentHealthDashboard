@@ -36,6 +36,7 @@ Manual commands:
 ```bash
 pnpm run guard:staged
 pnpm run guard:tracked
+pnpm lint
 pnpm run check:types
 pnpm test
 pnpm build
@@ -74,12 +75,13 @@ git commit --amend
 GitHub Actions required checks:
 
 - `guard-files`
+- `lint`
 - `typecheck`
 - `test`
 - `build`
 - `commitlint`
 
-PRs to `main` must pass all required checks.
+PRs targeting any branch listed in `.github/workflows/ci.yml` must pass all required checks.
 
 ## Repository Settings (Manual)
 

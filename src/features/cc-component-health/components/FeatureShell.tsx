@@ -45,7 +45,7 @@ function PlusIcon() {
 
 export function FeatureShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { hydrated, state, alerts, bikes, resetDemoState } = useDemoState();
+  const { hydrated, state, alerts, resetDemoState } = useDemoState();
 
   if (!hydrated) {
     return (
@@ -95,7 +95,7 @@ export function FeatureShell({ children }: { children: React.ReactNode }) {
               Subscribe
             </button>
             <button
-              aria-label="Notifications"
+              aria-label={`${alerts.length} notifications`}
               className={styles.utilityIconButton}
               type="button"
             >
@@ -141,12 +141,6 @@ export function FeatureShell({ children }: { children: React.ReactNode }) {
           <div className={styles.subnavMeta}>
             <div className={styles.statusRow}>
               <span className={styles.statusBadge}>{state.athleteName}</span>
-              <span className={`${styles.statusBadge} ${styles.statusMuted}`}>
-                {bikes.length} bikes
-              </span>
-              <span className={`${styles.statusBadge} ${styles.statusMuted}`}>
-                {alerts.length} alerts
-              </span>
             </div>
             <button className={styles.buttonGhost} type="button" onClick={resetDemoState}>
               Restore defaults
