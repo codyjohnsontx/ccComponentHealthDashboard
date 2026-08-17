@@ -49,6 +49,11 @@ Do not silence these rules to land a message. A commitlint run that cannot
 reject anything still reports success, and that green check then reads as
 evidence the message was validated.
 
+The CI job lints every commit in the pushed or proposed range, so tooling that
+commits onto a branch has to produce conforming messages too. The no-mistakes
+pipeline's fix-commit prefix is configured in `.no-mistakes.yaml` for that
+reason: point the tool at a real type instead of relaxing a rule here.
+
 ## Local Guardrails
 
 Local hooks run automatically:
