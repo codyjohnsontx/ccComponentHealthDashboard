@@ -1,0 +1,14 @@
+# The no-mistakes pipeline commits its own gate fixes onto the branch under
+# review, and those commits sit inside the range the commitlint CI job lints.
+#
+# Its default template, "no-mistakes({{.Step}}): {{.Summary}}", can never pass
+# the Conventional Commit rules this repository enforces. The parser's
+# headerPattern is /^(\w*)(?:\((.*)\))?!?: (.*)$/ and \w excludes "-", so
+# "no-mistakes" is not parsed as a type at all: commitlint sees an empty type
+# and an empty subject and fires type-empty and subject-empty, both errors.
+#
+# Point the template at a real type instead. The toolchain conforms to the
+# documented standard rather than the standard being weakened to fit the
+# toolchain - see commitlint.config.cjs and docs/atomic-commits.md.
+commit:
+  fix_message: "chore({{.Step}}): {{.Summary}}"
