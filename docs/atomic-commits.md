@@ -23,6 +23,21 @@ Examples:
 - `fix(setup): keep bike selection when adding preset`
 - `chore(repo): ignore generated next build artifacts`
 
+### What commitlint enforces
+
+`commitlint.config.cjs` extends `@commitlint/config-conventional` with no rule
+overrides, so a message is rejected when it:
+
+- has no type, or a type outside `build`, `chore`, `ci`, `docs`, `feat`, `fix`,
+  `perf`, `refactor`, `revert`, `style`, `test`
+- has no subject, or ends the subject with a period
+- has a header (the `type(scope): summary` line) longer than 100 characters
+- wraps body lines beyond 100 characters
+
+Do not silence these rules to land a message. A commitlint run that cannot
+reject anything still reports success, and that green check then reads as
+evidence the message was validated.
+
 ## Local Guardrails
 
 Local hooks run automatically:
