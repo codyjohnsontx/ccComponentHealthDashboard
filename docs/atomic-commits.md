@@ -23,6 +23,37 @@ Examples:
 - `fix(setup): keep bike selection when adding preset`
 - `chore(repo): ignore generated next build artifacts`
 
+### What commitlint enforces
+
+`commitlint.config.cjs` extends `@commitlint/config-conventional` with no rule
+overrides, so a message is rejected when it:
+
+- has no type, or a type outside `build`, `chore`, `ci`, `docs`, `feat`, `fix`,
+  `perf`, `refactor`, `revert`, `style`, `test`
+- writes the type in anything but lower-case, so `Fix(dashboard): ...` is rejected
+- has no subject, or ends the subject with a period
+- writes the subject in sentence-case, start-case, pascal-case or upper-case;
+  capitalizing the first word is enough to fail, so use
+  `fix(dashboard): keep the chosen bike filter`, not
+  `fix(dashboard): Keep the chosen bike filter`
+- has a header (the `type(scope): summary` line) longer than 100 characters
+- leaves leading or trailing whitespace on the header
+- wraps body lines beyond 100 characters
+- wraps footer lines beyond 100 characters
+
+Two further rules are warnings rather than errors: `body-leading-blank` and
+`footer-leading-blank` report a missing blank line before the body or footer
+without failing the run.
+
+Do not silence these rules to land a message. A commitlint run that cannot
+reject anything still reports success, and that green check then reads as
+evidence the message was validated.
+
+The CI job lints every commit in the pushed or proposed range, so tooling that
+commits onto a branch has to produce conforming messages too. The no-mistakes
+pipeline's fix-commit prefix is configured in `.no-mistakes.yaml` for that
+reason: point the tool at a real type instead of relaxing a rule here.
+
 ## Local Guardrails
 
 Local hooks run automatically:

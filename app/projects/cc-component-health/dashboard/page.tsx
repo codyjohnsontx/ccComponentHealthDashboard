@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 
 import { trackEvent } from "@/src/features/cc-component-health/analytics/trackEvent";
@@ -14,7 +14,6 @@ const emittedDashboardEvents = new Set<string>();
 
 export default function ComponentHealthDashboardPage() {
   const {
-    hydrated,
     dashboardSnapshot,
     selectBike,
     state
@@ -31,19 +30,6 @@ export default function ComponentHealthDashboardPage() {
     spendAtRisk,
     priorityItems
   } = dashboardSnapshot;
-  const hasInitializedBikeFilter = useRef(false);
-
-  useEffect(() => {
-    if (!hydrated || hasInitializedBikeFilter.current) {
-      return;
-    }
-
-    hasInitializedBikeFilter.current = true;
-
-    if (bikes.length > 1 && selectedBikeId !== "all") {
-      selectBike("all");
-    }
-  }, [bikes.length, hydrated, selectBike, selectedBikeId]);
 
   useEffect(() => {
     const key = "dashboard_viewed";
