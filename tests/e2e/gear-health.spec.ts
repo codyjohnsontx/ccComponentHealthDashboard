@@ -37,4 +37,9 @@ test("bike filter survives leaving the dashboard and coming back", async ({ page
   // Remounting the dashboard must not overwrite the filter the rider chose.
   await expect(cards.filter({ hasText: "Specialized Crux" })).not.toHaveCount(0);
   await expect(cards.filter({ hasText: "Factor OSTRO VAM" })).toHaveCount(0);
+
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Current replacement timing" })).toBeVisible();
+  await expect(cards.filter({ hasText: "Specialized Crux" })).not.toHaveCount(0);
+  await expect(cards.filter({ hasText: "Factor OSTRO VAM" })).toHaveCount(0);
 });
