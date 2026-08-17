@@ -13,6 +13,10 @@ on:
       - main
       - codex/ride-component-health-mvp
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   guard-files:
     name: guard-files
