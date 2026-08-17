@@ -13,6 +13,11 @@ on:
       - main
       - codex/ride-component-health-mvp
 
+# Cancellation is deliberately gated on the event, not blanket. On a
+# pull_request, github.ref is refs/pull/<n>/merge, so a second push supersedes
+# the first and the stale matrix stops. On a push to a release branch, github.ref
+# is refs/heads/<branch> and this evaluates to false, so those runs always finish
+# - cancelling them would leave the branch with no completed verification.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
