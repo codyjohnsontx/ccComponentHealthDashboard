@@ -206,7 +206,10 @@ export function createSeededDemoState(): DemoState {
     stravaMode: "mock",
     athleteName: "Hunter Lewis",
     bikes: seededBikes.map((bike) => ({ ...bike })),
-    selectedBikeId: SEEDED_BIKE_IDS.road,
+    // The seed ships more than one bike, so the unfiltered view is the right
+    // starting point. Seeding a specific bike here would make every surface
+    // open pre-filtered and force the UI to correct it at render time.
+    selectedBikeId: "all",
     components: seededComponents.map((component) => ({ ...component })),
     serviceEvents: seededServiceEvents.map((event) => ({ ...event })),
     affiliateClicks: []

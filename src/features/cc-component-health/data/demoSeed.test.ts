@@ -26,6 +26,10 @@ describe("seeded demo state", () => {
     expect(cruxComponents).toHaveLength(6);
   });
 
+  it("starts unfiltered so no surface has to correct the bike filter at render time", () => {
+    expect(createSeededDemoState().selectedBikeId).toBe("all");
+  });
+
   it("produces alerts across bikes on first load", () => {
     const seededState = createSeededDemoState();
     const bikeSensitivityById = Object.fromEntries(
