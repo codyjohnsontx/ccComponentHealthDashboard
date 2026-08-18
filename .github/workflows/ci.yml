@@ -236,7 +236,8 @@ jobs:
       - name: Resolve Playwright version
         id: playwright
         run: |
-          echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+          version="$(node -p "require('@playwright/test/package.json').version")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       # Keyed on the resolved Playwright version, so a dependency bump misses the
       # cache and downloads the matching browser instead of running against a
