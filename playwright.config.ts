@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  forbidOnly: !!process.env.CI,
   use: {
     baseURL: "http://localhost:3101",
     trace: "on-first-retry"
