@@ -70,8 +70,12 @@ pnpm run guard:tracked
 pnpm lint
 pnpm run check:types
 pnpm test
+pnpm test:e2e
 pnpm build
 ```
+
+`pnpm test:e2e` needs a Chromium install once per machine; the Local Development
+section of `README.md` has the command.
 
 ## Hook Failure Playbook
 
