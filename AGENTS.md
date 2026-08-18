@@ -12,9 +12,10 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - Mutations under `server/mutations/` are pure reducers shared by the routes and the client
   provider. `validateBikeSetup` only validates; it is named for what it does.
 - Quality gates mirror `.github/workflows/ci.yml`: `pnpm run guard:tracked`, `pnpm lint`,
-  `pnpm run check:types`, `pnpm test`, `pnpm build`, and commitlint over the commit range
-  (`docs/atomic-commits.md` owns the commit and required-check policy). E2E is
-  `pnpm test:e2e` and is not in CI.
+  `pnpm run check:types`, `pnpm test`, `pnpm test:e2e`, `pnpm build`, and commitlint over the
+  commit range (`docs/atomic-commits.md` owns the commit and required-check policy). The `e2e`
+  job caches the Chromium download by resolved Playwright version; a `@playwright/test` bump
+  misses that cache on purpose.
 - `eslint.config.mjs` keeps base `no-undef`/`no-unused-vars` on for JS and swaps in
   `@typescript-eslint/no-unused-vars` for TS, because the base rules cannot read TypeScript
   type positions. Do not disable them repo-wide to silence that.

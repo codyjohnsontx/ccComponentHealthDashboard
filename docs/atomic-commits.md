@@ -111,6 +111,7 @@ GitHub Actions required checks:
 - `test`
 - `build`
 - `commitlint`
+- `e2e`
 
 PRs targeting any branch listed in `.github/workflows/ci.yml` must pass all required checks.
 
