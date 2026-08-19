@@ -207,10 +207,10 @@ jobs:
   e2e:
     name: e2e
     runs-on: ubuntu-latest
-    # The suite is two Playwright tests against a single Chromium and finishes in
-    # seconds once the browser is cached. This ceiling exists to fail fast if the
-    # browser download or the dev server ever hangs, rather than to bound normal
-    # work.
+    # The suite is a handful of Playwright tests against a single Chromium and
+    # finishes in seconds once the browser is cached. This ceiling exists to fail
+    # fast if the browser download or the dev server ever hangs, rather than to
+    # bound normal work.
     timeout-minutes: 15
     steps:
       - name: Checkout
