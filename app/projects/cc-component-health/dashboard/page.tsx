@@ -94,28 +94,30 @@ export default function ComponentHealthDashboardPage() {
     <section className={styles.desktopThreeCol}>
       <aside className={styles.leftRail}>
         <section className={styles.panel}>
-          <p className="eyebrow">Bike filters</p>
-          <div className={styles.filterGroup}>
-            <button
-              className={`${styles.filterPill} ${selectedBikeId === "all" ? styles.filterPillActive : ""}`}
-              type="button"
-              onClick={() => selectBike("all")}
-            >
-              All bikes
-            </button>
-            {bikes.map((bike) => (
-              <button
-                key={bike.id}
-                className={`${styles.filterPill} ${
-                  selectedBikeId === bike.id ? styles.filterPillActive : ""
-                }`}
-                type="button"
-                onClick={() => selectBike(bike.id)}
-              >
-                {bike.name}
-              </button>
-            ))}
-          </div>
+          {/* One bike is always in effect and picking one replaces the last, so the
+              pills are a radio group, not toggles and not tabs: the choice is a
+              value, and it filters several regions rather than swapping one panel.
+              Native inputs carry the checked state, the single tab stop, and the
+              arrow-key roving focus that a hand-rolled role would have to
+              reimplement. */}
+          <fieldset className={styles.filterFieldset} role="radiogroup">
+            <legend className={`eyebrow ${styles.filterLegend}`}>Bike filters</legend>
+            <div className={styles.filterGroup}>
+              {[{ id: "all", name: "All bikes" }, ...bikes].map((option) => (
+                <label className={styles.filterPill} key={option.id}>
+                  <input
+                    checked={selectedBikeId === option.id}
+                    className={styles.filterPillInput}
+                    name="bike-filter"
+                    type="radio"
+                    value={option.id}
+                    onChange={() => selectBike(option.id)}
+                  />
+                  {option.name}
+                </label>
+              ))}
+            </div>
+          </fieldset>
         </section>
 
         <section className={styles.panel}>
