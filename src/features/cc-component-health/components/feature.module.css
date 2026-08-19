@@ -778,9 +778,35 @@
   color: var(--accent);
 }
 
+/* The covering input is opacity 0, so its own UA ring never paints and this is
+   the only signal that focus reached the group: it has to clear 3:1 on its own,
+   which a translucent accent does not. */
 .filterPill:has(.filterPillInput:focus-visible) {
-  outline: 2px solid rgba(252, 76, 2, 0.6);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Every pill reserves the mark's slot and only the checked one paints the
+   stroke, so changing the selection never resizes a pill. rotate(45deg) paints
+   the mark wider than its layout box; the margin restores that overhang so the
+   flex gap is the gap you actually see. */
+.filterPill::before {
+  --mark-inline: calc(0.42rem + 2px);
+  --mark-block: calc(0.72rem + 2px);
+
+  content: "";
+  flex: none;
+  /* The `*` reset does not match pseudo-elements, so this box is opted in
+     explicitly and the sizes above are the painted stroke, borders included. */
+  box-sizing: border-box;
+  width: var(--mark-inline);
+  height: var(--mark-block);
+  margin-inline: calc(
+    ((var(--mark-inline) + var(--mark-block)) / 1.41421 - var(--mark-inline)) / 2
+  );
+  border: solid transparent;
+  border-width: 0 2px 2px 0;
+  transform: translateY(-0.09rem) rotate(45deg);
 }
 
 /* Colour carries the selection for most people, but not for everyone: the check
@@ -789,19 +815,14 @@
   background: var(--accent-soft);
   border-color: rgba(252, 76, 2, 0.3);
   border-width: 2px;
-  /* Absorb the extra border so the pill does not grow and reflow the group. */
+  /* Absorb the extra border width so the pill keeps its unchecked size. */
   padding: 0 calc(0.75rem - 1px);
   color: var(--accent);
   font-weight: 700;
 }
 
 .filterPill:has(.filterPillInput:checked)::before {
-  content: "";
-  width: 0.42rem;
-  height: 0.72rem;
-  border: solid currentColor;
-  border-width: 0 2px 2px 0;
-  transform: translateY(-0.09rem) rotate(45deg);
+  border-color: currentColor;
 }
 
 .railListItemHeader {
