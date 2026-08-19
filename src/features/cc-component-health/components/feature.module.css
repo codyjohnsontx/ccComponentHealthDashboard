@@ -786,10 +786,12 @@
   outline-offset: 2px;
 }
 
-/* Every pill reserves the mark's slot and only the checked one paints the
-   stroke, so changing the selection never resizes a pill. rotate(45deg) paints
-   the mark wider than its layout box; the margin restores that overhang so the
-   flex gap is the gap you actually see. */
+/* Every pill reserves the mark's slot, so the slot contributes the same width
+   whichever pill is selected. rotate(45deg) paints the mark wider than its
+   layout box; the margin restores that overhang so the flex gap is the gap you
+   actually see. The unchecked mark is hidden with `visibility` rather than a
+   transparent border because forced-colors mode overrides border-color and
+   would paint a mark on every pill. */
 .filterPill::before {
   --mark-inline: calc(0.42rem + 2px);
   --mark-block: calc(0.72rem + 2px);
@@ -804,9 +806,10 @@
   margin-inline: calc(
     ((var(--mark-inline) + var(--mark-block)) / 1.41421 - var(--mark-inline)) / 2
   );
-  border: solid transparent;
+  border: solid currentColor;
   border-width: 0 2px 2px 0;
   transform: translateY(-0.09rem) rotate(45deg);
+  visibility: hidden;
 }
 
 /* Colour carries the selection for most people, but not for everyone: the check
@@ -815,14 +818,15 @@
   background: var(--accent-soft);
   border-color: rgba(252, 76, 2, 0.3);
   border-width: 2px;
-  /* Absorb the extra border width so the pill keeps its unchecked size. */
+  /* Offset the extra border width so the border itself does not widen the pill.
+     The bolder label still does, by 1.5-2.6px depending on its length. */
   padding: 0 calc(0.75rem - 1px);
   color: var(--accent);
   font-weight: 700;
 }
 
 .filterPill:has(.filterPillInput:checked)::before {
-  border-color: currentColor;
+  visibility: visible;
 }
 
 .railListItemHeader {
