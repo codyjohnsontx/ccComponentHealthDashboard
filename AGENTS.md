@@ -19,6 +19,10 @@ This file is the project's committed home for project-intrinsic agent knowledge:
 - `eslint.config.mjs` keeps base `no-undef`/`no-unused-vars` on for JS and swaps in
   `@typescript-eslint/no-unused-vars` for TS, because the base rules cannot read TypeScript
   type positions. Do not disable them repo-wide to silence that.
+- The `.eyebrow` label style in `app/globals.css` uppercases with `text-transform`, and Chrome
+  bakes that into the computed accessible name: an element labelled `Bike filters` is named
+  `BIKE FILTERS` in the browser's accessibility tree while Playwright still matches the DOM
+  casing. Read a real tree before trusting either when asserting on accessible names.
 
 ## Maintaining this file
 
